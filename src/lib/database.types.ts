@@ -4,6 +4,7 @@ export interface Database {
       events: {
         Row: {
           id: string;
+          app_id: string;
           name: string;
           description: string;
           event_date: string;
@@ -16,6 +17,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          app_id?: string;
           name: string;
           description?: string;
           event_date: string;
@@ -28,6 +30,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          app_id?: string;
           name?: string;
           description?: string;
           event_date?: string;
@@ -42,18 +45,21 @@ export interface Database {
       admin_settings: {
         Row: {
           id: string;
+          app_id: string;
           admin_password: string;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
+          app_id?: string;
           admin_password: string;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
+          app_id?: string;
           admin_password?: string;
           created_at?: string;
           updated_at?: string;
@@ -62,6 +68,7 @@ export interface Database {
       attendees: {
         Row: {
           id: string;
+          app_id: string;
           event_id: string;
           salutation: string;
           first_name: string;
@@ -83,6 +90,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          app_id?: string;
           event_id: string;
           salutation?: string;
           first_name: string;
@@ -104,6 +112,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          app_id?: string;
           event_id?: string;
           salutation?: string;
           first_name?: string;
@@ -128,6 +137,7 @@ export interface Database {
       check_in_history: {
         Row: {
           id: string;
+          app_id: string;
           attendee_id: string;
           event_id: string;
           checked_in_by: string;
@@ -136,6 +146,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          app_id?: string;
           attendee_id: string;
           event_id: string;
           checked_in_by: string;
@@ -144,6 +155,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          app_id?: string;
           attendee_id?: string;
           event_id?: string;
           checked_in_by?: string;
