@@ -17,6 +17,7 @@ interface ReportData {
   organizationDistribution: Record<string, number>;
   registrationSourceDistribution: Record<string, number>;
   checkInsByHour: Record<string, number>;
+  registrationsByHour: Record<string, number>;
   attendees: Attendee[];
 }
 
@@ -45,6 +46,9 @@ export function ReportingDashboard({ event, onClose }: ReportingDashboardProps) 
       const organizationDistribution: Record<string, number> = {};
       const registrationSourceDistribution: Record<string, number> = {};
       const checkInsByHour: Record<string, number> = {};
+      const registrationsByHour: Record<string, number> = {};
+      const eventDate = new Date(event.event_date);
+      eventDate.setHours(0, 0, 0, 0);
 
       attendees.forEach(attendee => {
         if (attendee.gender) {
@@ -55,8 +59,20 @@ export function ReportingDashboard({ event, onClose }: ReportingDashboardProps) 
           organizationDistribution[attendee.organization] = (organizationDistribution[attendee.organization] || 0) + 1;
         }
 
-        if (attendee.registration_source) {
-          registrationSourceDistribution[attendee.registration_source] = (registrationSourceDistribution[attendee.registration_source] || 0) + 1;
+        const registrationDate = new Date(attendee.created_at);
+        registrationDate.setHours(0, 0, 0, 0);
+
+        if (registrationDate.getTime() < eventDate.getTime()) {
+          registrationSourceDistribution['Pre-registered'] = (registrationSourceDistribution['Pre-registered'] || 0) + 1;
+        } else {
+          registrationSourceDistribution['Registered on Day'] = (registrationSourceDistribution['Registered on Day'] || 0) + 1;
+        }
+
+        if (attendee.created_at) {
+          const regDate = new Date(attendee.created_at);
+          const hour = regDate.getHours();
+          const hourLabel = `${hour.toString().padStart(2, '0')}:00-${(hour + 1).toString().padStart(2, '0')}:00`;
+          registrationsByHour[hourLabel] = (registrationsByHour[hourLabel] || 0) + 1;
         }
 
         if (attendee.checked_in_at) {
@@ -75,6 +91,7 @@ export function ReportingDashboard({ event, onClose }: ReportingDashboardProps) 
         organizationDistribution,
         registrationSourceDistribution,
         checkInsByHour,
+        registrationsByHour,
         attendees,
       });
     }
@@ -152,9 +169,11 @@ export function ReportingDashboard({ event, onClose }: ReportingDashboardProps) 
       const genderCanvas = document.getElementById('gender-chart') as HTMLCanvasElement;
       const sourceCanvas = document.getElementById('source-chart') as HTMLCanvasElement;
       const checkInCanvas = document.getElementById('checkin-chart') as HTMLCanvasElement;
+      const regTimeCanvas = document.getElementById('regtime-chart') as HTMLCanvasElement;
       const genderCanvasPrint = document.getElementById('gender-chart-print') as HTMLCanvasElement;
       const sourceCanvasPrint = document.getElementById('source-chart-print') as HTMLCanvasElement;
       const checkInCanvasPrint = document.getElementById('checkin-chart-print') as HTMLCanvasElement;
+      const regTimeCanvasPrint = document.getElementById('regtime-chart-print') as HTMLCanvasElement;
 
       if (genderCanvas) {
         drawPieChart(genderCanvas, reportData.genderDistribution, 'Gender Distribution');
@@ -167,6 +186,9 @@ export function ReportingDashboard({ event, onClose }: ReportingDashboardProps) 
           'Checked In': reportData.checkedIn,
           'Not Checked In': reportData.notCheckedIn
         }, 'Check-In Status');
+      }
+      if (regTimeCanvas) {
+        drawPieChart(regTimeCanvas, reportData.registrationsByHour, 'Registrations by Hour');
       }
 
       if (genderCanvasPrint) {
@@ -181,8 +203,11 @@ export function ReportingDashboard({ event, onClose }: ReportingDashboardProps) 
           'Not Checked In': reportData.notCheckedIn
         }, 'Check-In Status');
       }
+      if (regTimeCanvasPrint) {
+        drawPieChart(regTimeCanvasPrint, reportData.registrationsByHour, 'Registrations by Hour');
+      }
     }
-  }, [reportData, loading]);
+  }, [reportData, loading, topOrgLimit]);
 
   const handlePrint = () => {
     window.print();
@@ -351,7 +376,7 @@ export function ReportingDashboard({ event, onClose }: ReportingDashboardProps) 
 
             <div className="mb-8">
               <h3 className="text-2xl font-bold text-slate-900 mb-6">Visual Analytics</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white rounded-xl shadow-lg border-2 border-slate-200 p-6">
                   <canvas id="gender-chart" width="300" height="350"></canvas>
                 </div>
@@ -360,6 +385,9 @@ export function ReportingDashboard({ event, onClose }: ReportingDashboardProps) 
                 </div>
                 <div className="bg-white rounded-xl shadow-lg border-2 border-slate-200 p-6">
                   <canvas id="checkin-chart" width="300" height="350"></canvas>
+                </div>
+                <div className="bg-white rounded-xl shadow-lg border-2 border-slate-200 p-6">
+                  <canvas id="regtime-chart" width="300" height="350"></canvas>
                 </div>
               </div>
             </div>
@@ -477,7 +505,7 @@ export function ReportingDashboard({ event, onClose }: ReportingDashboardProps) 
 
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-slate-900 mb-4">Visual Analytics</h2>
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 gap-6">
             <div className="border-2 border-slate-200 rounded-lg p-4">
               <canvas id="gender-chart-print" width="300" height="350"></canvas>
             </div>
@@ -486,6 +514,9 @@ export function ReportingDashboard({ event, onClose }: ReportingDashboardProps) 
             </div>
             <div className="border-2 border-slate-200 rounded-lg p-4">
               <canvas id="checkin-chart-print" width="300" height="350"></canvas>
+            </div>
+            <div className="border-2 border-slate-200 rounded-lg p-4">
+              <canvas id="regtime-chart-print" width="300" height="350"></canvas>
             </div>
           </div>
         </div>

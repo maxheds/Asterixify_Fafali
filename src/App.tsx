@@ -16,7 +16,7 @@ function App() {
   const [selectedEventId, setSelectedEventId] = useState<string>('');
 
   useEffect(() => {
-    if (modalMode === 'checkin') {
+    if (modalMode === 'checkin' && !selectedEventId) {
       loadActiveEvent();
     }
   }, [modalMode]);
@@ -35,6 +35,21 @@ function App() {
     }
   };
 
+  const openCheckInModal = async () => {
+    const { data, error } = await supabase
+      .from('events')
+      .select('id')
+      .eq('is_active', true)
+      .order('event_date', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (!error && data) {
+      setSelectedEventId(data.id);
+      setModalMode('checkin');
+    }
+  };
+
   const closeModal = () => {
     setModalMode('none');
     setSelectedEventId('');
@@ -48,7 +63,7 @@ function App() {
           <>
             <HomePage
               onRegister={() => setModalMode('register')}
-              onCheckIn={() => setModalMode('checkin')}
+              onCheckIn={openCheckInModal}
             />
 
             <Modal
