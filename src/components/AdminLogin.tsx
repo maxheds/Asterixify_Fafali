@@ -39,7 +39,7 @@ export function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center p-4 z-50 animate-fade-in">
+    <>
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-700">
         <div className="flex items-center justify-center mb-6">
           <div className="bg-slate-700/50 p-4 rounded-full">
@@ -87,6 +87,6 @@ export function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
           </div>
         </form>
       </div>
-    </div>
+    </>
   );
 }
