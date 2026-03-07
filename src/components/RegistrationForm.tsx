@@ -293,27 +293,21 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     <div className="min-h-screen bg-transparent py-2 px-3 overflow-y-auto">
       <div className="max-w-3xl mx-auto pb-2">
         {selectedEvent && (
-          <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-md border border-lime-500/30 px-4 py-2 mb-2">
-            <div className="text-center">
-              <h2 className="text-lg font-bold text-lime-200 mb-1">Registration for</h2>
-              <h3 className="text-xl font-bold bg-gradient-to-r from-lime-400 to-lime-300 bg-clip-text text-transparent">{selectedEvent.name}</h3>
+          <div className="flex items-center justify-center gap-4 text-xs mb-2">
+            <div className="flex items-center gap-1 text-lime-300">
+              <Calendar size={14} className="text-lime-400" />
+              <span>{new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              })}</span>
             </div>
-            <div className="flex items-center justify-center gap-4 text-xs mt-2">
+            {selectedEvent.location && (
               <div className="flex items-center gap-1 text-lime-300">
-                <Calendar size={14} className="text-lime-400" />
-                <span>{new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric'
-                })}</span>
+                <MapPin size={14} className="text-lime-400" />
+                <span>{selectedEvent.location}</span>
               </div>
-              {selectedEvent.location && (
-                <div className="flex items-center gap-1 text-lime-300">
-                  <MapPin size={14} className="text-lime-400" />
-                  <span>{selectedEvent.location}</span>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         )}
 

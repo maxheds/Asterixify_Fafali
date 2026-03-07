@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { CheckInInterface } from './components/CheckInInterface';
@@ -7,12 +7,33 @@ import { CheckInEventSelector } from './components/CheckInEventSelector';
 import { HomePage } from './components/HomePage';
 import { Modal } from './components/Modal';
 import { AdminPage } from './components/AdminPage';
+import { supabase } from './lib/supabase';
 
 type ModalMode = 'none' | 'register' | 'checkin';
 
 function App() {
   const [modalMode, setModalMode] = useState<ModalMode>('none');
   const [selectedEventId, setSelectedEventId] = useState<string>('');
+
+  useEffect(() => {
+    if (modalMode === 'checkin') {
+      loadActiveEvent();
+    }
+  }, [modalMode]);
+
+  const loadActiveEvent = async () => {
+    const { data, error } = await supabase
+      .from('events')
+      .select('id')
+      .eq('is_active', true)
+      .order('event_date', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (!error && data) {
+      setSelectedEventId(data.id);
+    }
+  };
 
   const closeModal = () => {
     setModalMode('none');
@@ -33,23 +54,10 @@ function App() {
             <Modal
               isOpen={modalMode === 'register'}
               onClose={closeModal}
+              title="Registration for Event"
               size="large"
             >
               <RegistrationForm onSuccess={closeModal} />
-            </Modal>
-
-            <Modal
-              isOpen={modalMode === 'checkin' && !selectedEventId}
-              onClose={closeModal}
-              title="Select Event for Check-In"
-              size="medium"
-            >
-              <CheckInEventSelector
-                onSelectEvent={(eventId) => {
-                  setSelectedEventId(eventId);
-                }}
-                onBack={closeModal}
-              />
             </Modal>
 
             <Modal
@@ -65,10 +73,13 @@ function App() {
                 eventId={selectedEventId}
                 onBack={() => {
                   setSelectedEventId('');
-                  setModalMode('checkin');
+                  closeModal();
                 }}
                 onHome={closeModal}
-                onRegister={() => setModalMode('register')}
+                onRegister={() => {
+                  setSelectedEventId('');
+                  setModalMode('register');
+                }}
               />
             </Modal>
           </>
