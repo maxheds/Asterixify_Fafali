@@ -121,7 +121,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
             required={field.required}
             value={value}
             onChange={(e) => setCustomFieldValues({ ...customFieldValues, [field.id]: e.target.value })}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+            className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
             rows={3}
             placeholder={field.placeholder || ''}
           />
@@ -133,7 +133,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
             required={field.required}
             value={value}
             onChange={(e) => setCustomFieldValues({ ...customFieldValues, [field.id]: e.target.value })}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+            className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
           >
             <option value="">Select an option</option>
             {field.options?.map((option: string) => (
@@ -151,7 +151,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
             required={field.required}
             value={value}
             onChange={(e) => setCustomFieldValues({ ...customFieldValues, [field.id]: e.target.value })}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+            className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
             placeholder={field.placeholder || ''}
           />
         );
@@ -290,20 +290,15 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-3 px-4 overflow-y-auto">
+    <div className="min-h-screen bg-transparent py-3 px-4 overflow-y-auto">
       <div className="max-w-3xl mx-auto pb-3">
-        <div className="text-center mb-2">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1 tracking-tight">Event Registration</h1>
-          <p className="text-sm text-slate-600">Join us for an amazing experience</p>
-        </div>
-
         {selectedEvent && (
-          <div className="bg-white rounded-xl shadow-md border border-slate-200 px-4 py-3 mb-3">
+          <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-md border border-lime-500/30 px-4 py-3 mb-3">
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <h2 className="text-xl font-bold text-slate-900">{selectedEvent.name}</h2>
+              <h2 className="text-xl font-bold bg-gradient-to-r from-lime-400 to-lime-300 bg-clip-text text-transparent">{selectedEvent.name}</h2>
               <div className="flex items-center gap-6 text-sm">
-                <div className="flex items-center gap-2 text-slate-600">
-                  <Calendar size={18} className="text-blue-600" />
+                <div className="flex items-center gap-2 text-lime-300">
+                  <Calendar size={18} className="text-lime-400" />
                   <span>{new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'short',
@@ -311,8 +306,8 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                   })}</span>
                 </div>
                 {selectedEvent.location && (
-                  <div className="flex items-center gap-2 text-slate-600">
-                    <MapPin size={18} className="text-blue-600" />
+                  <div className="flex items-center gap-2 text-lime-300">
+                    <MapPin size={18} className="text-lime-400" />
                     <span>{selectedEvent.location}</span>
                   </div>
                 )}
@@ -322,17 +317,17 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-3 flex items-start gap-3">
-            <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-red-900/80 backdrop-blur-sm border border-red-500/50 rounded-xl p-4 mb-3 flex items-start gap-3">
+            <AlertCircle size={20} className="text-red-300 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-red-900 font-semibold mb-1">Registration Error</h3>
-              <p className="text-red-700 text-sm">{error}</p>
-              <p className="text-red-600 text-xs mt-2">Redirecting to home page...</p>
+              <h3 className="text-red-100 font-semibold mb-1">Registration Error</h3>
+              <p className="text-red-200 text-sm">{error}</p>
+              <p className="text-red-300 text-xs mt-2">Redirecting to home page...</p>
             </div>
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-4 md:p-5">
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-lime-500/30 p-4 md:p-5">
           <div className="mb-3">
             <div className="flex items-center justify-between mb-3">
               {Array.from({ length: totalSteps }).map((_, index) => (
@@ -341,15 +336,15 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors ${
                         currentStep > index + 1
-                          ? 'bg-green-600 text-white'
+                          ? 'bg-lime-600 text-white'
                           : currentStep === index + 1
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-slate-200 text-slate-500'
+                          ? 'bg-lime-500 text-white'
+                          : 'bg-slate-700 text-slate-400 border border-lime-500/30'
                       }`}
                     >
                       {currentStep > index + 1 ? <CheckCircle2 size={20} /> : index + 1}
                     </div>
-                    <span className="text-xs font-medium text-slate-600 mt-2 text-center">
+                    <span className="text-xs font-medium text-lime-200 mt-2 text-center">
                       {index === 0
                         ? 'Basic Info'
                         : index === 1
@@ -362,7 +357,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                   {index < totalSteps - 1 && (
                     <div
                       className={`h-1 flex-1 mx-2 transition-colors ${
-                        currentStep > index + 1 ? 'bg-green-600' : 'bg-slate-200'
+                        currentStep > index + 1 ? 'bg-lime-600' : 'bg-slate-700'
                       }`}
                     />
                   )}
@@ -374,14 +369,14 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
           <form className="space-y-3">
             {events.length > 1 && currentStep === 1 && (
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Select Event <span className="text-red-500">*</span>
+                <label className="block text-sm font-semibold text-lime-200 mb-2">
+                  Select Event <span className="text-red-400">*</span>
                 </label>
                 <select
                   required
                   value={selectedEventId}
                   onChange={(e) => setSelectedEventId(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
                 >
                   {events.map(event => (
                     <option key={event.id} value={event.id}>
@@ -394,16 +389,16 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
             {currentStep === 1 && (
               <>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">Basic Information</h3>
+                <h3 className="text-lg font-bold text-lime-300 mb-3">Basic Information</h3>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-semibold text-lime-200 mb-2">
                     Salutation
                   </label>
                   <select
                     value={formData.salutation}
                     onChange={(e) => setFormData({ ...formData, salutation: e.target.value })}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
                   >
                     <option value="">Select salutation</option>
                     <option value="Mr.">Mr.</option>
@@ -418,15 +413,15 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {isFieldActive('first_name') && (
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        First Name {isFieldRequired('first_name') && <span className="text-red-500">*</span>}
+                      <label className="block text-sm font-semibold text-lime-200 mb-2">
+                        First Name {isFieldRequired('first_name') && <span className="text-red-400">*</span>}
                       </label>
                       <input
                         type="text"
                         required={isFieldRequired('first_name')}
                         value={formData.first_name}
                         onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
                         placeholder="John"
                       />
                     </div>
@@ -434,15 +429,15 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
                   {isFieldActive('last_name') && (
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Last Name {isFieldRequired('last_name') && <span className="text-red-500">*</span>}
+                      <label className="block text-sm font-semibold text-lime-200 mb-2">
+                        Last Name {isFieldRequired('last_name') && <span className="text-red-400">*</span>}
                       </label>
                       <input
                         type="text"
                         required={isFieldRequired('last_name')}
                         value={formData.last_name}
                         onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
                         placeholder="Doe"
                       />
                     </div>
@@ -451,15 +446,15 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
                 {isFieldActive('email') && (
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Email Address {isFieldRequired('email') && <span className="text-red-500">*</span>}
+                    <label className="block text-sm font-semibold text-lime-200 mb-2">
+                      Email Address {isFieldRequired('email') && <span className="text-red-400">*</span>}
                     </label>
                     <input
                       type="email"
                       required={isFieldRequired('email')}
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
                       placeholder="john.doe@example.com"
                     />
                   </div>
@@ -469,19 +464,19 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
             {currentStep === 2 && (
               <>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">Contact Information</h3>
+                <h3 className="text-lg font-bold text-lime-300 mb-3">Contact Information</h3>
 
                 {isFieldActive('phone') && (
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Phone Number {isFieldRequired('phone') && <span className="text-red-500">*</span>}
+                    <label className="block text-sm font-semibold text-lime-200 mb-2">
+                      Phone Number {isFieldRequired('phone') && <span className="text-red-400">*</span>}
                     </label>
                     <input
                       type="tel"
                       required={isFieldRequired('phone')}
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
                       placeholder="+233 123 456 7890"
                     />
                   </div>
@@ -489,14 +484,14 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
                 {isFieldActive('gender') && (
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Gender {isFieldRequired('gender') && <span className="text-red-500">*</span>}
+                    <label className="block text-sm font-semibold text-lime-200 mb-2">
+                      Gender {isFieldRequired('gender') && <span className="text-red-400">*</span>}
                     </label>
                     <select
                       required={isFieldRequired('gender')}
                       value={formData.gender}
                       onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
                     >
                       <option value="">Select gender</option>
                       <option value="Male">Male</option>
@@ -509,15 +504,15 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
                 {isFieldActive('organization') && (
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Company/Organization {isFieldRequired('organization') && <span className="text-red-500">*</span>}
+                    <label className="block text-sm font-semibold text-lime-200 mb-2">
+                      Company/Organization {isFieldRequired('organization') && <span className="text-red-400">*</span>}
                     </label>
                     <input
                       type="text"
                       required={isFieldRequired('organization')}
                       value={formData.organization}
                       onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
                       placeholder="ABC Corporation"
                     />
                   </div>
@@ -527,12 +522,12 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
             {currentStep === 3 && customFields.length > 0 && (
               <>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">Additional Information</h3>
+                <h3 className="text-lg font-bold text-lime-300 mb-3">Additional Information</h3>
 
                 {customFields.map((field: any) => (
                   <div key={field.id}>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      {field.label} {field.required && <span className="text-red-500">*</span>}
+                    <label className="block text-sm font-semibold text-lime-200 mb-2">
+                      {field.label} {field.required && <span className="text-red-400">*</span>}
                     </label>
                     {renderCustomField(field)}
                   </div>
@@ -542,59 +537,59 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
             {((currentStep === 3 && customFields.length === 0) || (currentStep === 4 && customFields.length > 0)) && (
               <>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">Review and Print Your Badge</h3>
+                <h3 className="text-lg font-bold text-lime-300 mb-3">Review and Print Your Badge</h3>
 
-                <div className="bg-slate-50 rounded-lg p-4 space-y-3">
+                <div className="bg-slate-700/60 backdrop-blur-sm rounded-lg p-4 space-y-3 border border-lime-500/20">
                   {formData.salutation && (
                     <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">Salutation</p>
-                      <p className="text-sm text-slate-900 font-medium">{formData.salutation}</p>
+                      <p className="text-xs font-semibold text-lime-300 mb-1">Salutation</p>
+                      <p className="text-sm text-white font-medium">{formData.salutation}</p>
                     </div>
                   )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">First Name</p>
-                      <p className="text-sm text-slate-900 font-medium">{formData.first_name}</p>
+                      <p className="text-xs font-semibold text-lime-300 mb-1">First Name</p>
+                      <p className="text-sm text-white font-medium">{formData.first_name}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">Last Name</p>
-                      <p className="text-sm text-slate-900 font-medium">{formData.last_name}</p>
+                      <p className="text-xs font-semibold text-lime-300 mb-1">Last Name</p>
+                      <p className="text-sm text-white font-medium">{formData.last_name}</p>
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold text-slate-600 mb-1">Email</p>
-                    <p className="text-slate-900 font-medium">{formData.email}</p>
+                    <p className="text-xs font-semibold text-lime-300 mb-1">Email</p>
+                    <p className="text-white font-medium">{formData.email}</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">Phone</p>
-                      <p className="text-sm text-slate-900 font-medium">{formData.phone}</p>
+                      <p className="text-xs font-semibold text-lime-300 mb-1">Phone</p>
+                      <p className="text-sm text-white font-medium">{formData.phone}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">Gender</p>
-                      <p className="text-sm text-slate-900 font-medium">{formData.gender}</p>
+                      <p className="text-xs font-semibold text-lime-300 mb-1">Gender</p>
+                      <p className="text-sm text-white font-medium">{formData.gender}</p>
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold text-slate-600 mb-1">Company/Organization</p>
-                    <p className="text-slate-900 font-medium">{formData.organization}</p>
+                    <p className="text-xs font-semibold text-lime-300 mb-1">Company/Organization</p>
+                    <p className="text-white font-medium">{formData.organization}</p>
                   </div>
 
                   {customFields.length > 0 && Object.keys(customFieldValues).length > 0 && (
                     <>
-                      <div className="border-t border-slate-300 pt-4 mt-4">
-                        <p className="text-sm font-bold text-slate-700 mb-3">Additional Information</p>
+                      <div className="border-t border-lime-500/30 pt-4 mt-4">
+                        <p className="text-sm font-bold text-lime-300 mb-3">Additional Information</p>
                         {customFields.map((field: any) => {
                           const value = customFieldValues[field.id];
                           if (!value) return null;
                           return (
                             <div key={field.id} className="mb-3">
-                              <p className="text-xs font-semibold text-slate-600 mb-1">{field.label}</p>
-                              <p className="text-sm text-slate-900 font-medium">{value}</p>
+                              <p className="text-xs font-semibold text-lime-300 mb-1">{field.label}</p>
+                              <p className="text-sm text-white font-medium">{value}</p>
                             </div>
                           );
                         })}
@@ -610,7 +605,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-semibold"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border border-lime-500/30 text-lime-300 rounded-lg hover:bg-lime-500/10 transition-colors font-semibold"
                 >
                   <ChevronLeft size={20} />
                   Back
@@ -628,7 +623,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                       ? !canProceedStep2()
                       : !canProceedStep3()
                   }
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-600/20"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-lime-600/20"
                 >
                   Next
                   <ChevronRight size={20} />
@@ -638,7 +633,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                   type="button"
                   onClick={handleSubmit}
                   disabled={loading || !selectedEventId}
-                  className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold disabled:opacity-50 shadow-lg shadow-green-600/20"
+                  className="flex-1 px-6 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 shadow-lg shadow-lime-600/20"
                 >
                   {loading ? 'Registering...' : 'Complete Registration'}
                 </button>
@@ -647,9 +642,9 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
           </form>
         </div>
 
-        <div className="text-center mt-4 text-slate-600 space-y-1">
+        <div className="text-center mt-4 text-lime-200 space-y-1">
           <p className="text-xs">Your information is secure and will only be used for event purposes.</p>
-          <p className="text-xs text-slate-500">Developed and Built by Asterixify Innovations © 2025</p>
+          <p className="text-xs text-lime-300">Developed and Built by Asterixify Innovations © 2025</p>
         </div>
       </div>
     </div>

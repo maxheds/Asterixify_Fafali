@@ -74,7 +74,6 @@ function App() {
       <Modal
         isOpen={modalMode === 'register'}
         onClose={closeModal}
-        title="Event Registration"
         size="large"
       >
         <RegistrationForm onSuccess={closeModal} />
