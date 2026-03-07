@@ -61,13 +61,13 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
     const { data, error } = await supabase
       .from('attendees')
-      .insert([{
+      .insert({
         ...formData,
         event_id: selectedEventId,
         registration_source: 'online',
         form_data: customFieldValues,
-      }])
-      .select()
+      })
+      .select('*')
       .single();
 
     setLoading(false);
