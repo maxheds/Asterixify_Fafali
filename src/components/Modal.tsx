@@ -54,10 +54,12 @@ export function Modal({ isOpen, onClose, children, title, size = 'medium' }: Mod
         onClick={onClose}
       />
 
-      <div className={`relative bg-transparent rounded-2xl shadow-2xl border-2 border-lime-500/30 w-full ${sizeClasses[size]} h-[95vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200`}>
+      <div className={`relative bg-transparent rounded-2xl shadow-2xl border-2 border-lime-500/30 w-full ${sizeClasses[size]} max-h-[95vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200`}>
         {title && (
           <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-lime-500/20 bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-sm flex-shrink-0">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-lime-400 to-lime-300 bg-clip-text text-transparent">{title}</h2>
+            <div className="flex-1 text-center">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-lime-400 to-lime-300 bg-clip-text text-transparent">{title}</h2>
+            </div>
             <button
               onClick={onClose}
               className="p-1.5 sm:p-2 rounded-full hover:bg-lime-500/20 transition-all duration-300 border border-lime-500/30"
@@ -68,7 +70,7 @@ export function Modal({ isOpen, onClose, children, title, size = 'medium' }: Mod
           </div>
         )}
 
-        <div className="flex-1 bg-slate-900/70 backdrop-blur-sm overflow-y-auto">
+        <div className="flex-1 min-h-0 bg-slate-900/70 backdrop-blur-sm overflow-y-auto">
           {children}
         </div>
       </div>
