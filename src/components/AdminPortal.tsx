@@ -8,7 +8,7 @@ import { ImportAttendees } from './ImportAttendees';
 import { FormFieldEditor } from './FormFieldEditor';
 import { ReportingDashboard } from './ReportingDashboard';
 
-export function AdminPortal({ onNavigateToCheckIn }: { onNavigateToCheckIn: (eventId: string) => void }) {
+export function AdminPortal({ onNavigateToCheckIn, onLogout }: { onNavigateToCheckIn: (eventId: string) => void; onLogout?: () => void }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
@@ -183,13 +183,23 @@ export function AdminPortal({ onNavigateToCheckIn }: { onNavigateToCheckIn: (eve
             </div>
           )}
 
-          <button
-            onClick={() => setShowEventForm(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 flex-shrink-0"
-          >
-            <Plus size={20} />
-            New Event
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowEventForm(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 flex-shrink-0"
+            >
+              <Plus size={20} />
+              New Event
+            </button>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20 flex-shrink-0"
+              >
+                Logout
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

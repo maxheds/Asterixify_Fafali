@@ -121,8 +121,8 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
             required={field.required}
             value={value}
             onChange={(e) => setCustomFieldValues({ ...customFieldValues, [field.id]: e.target.value })}
-            className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
-            rows={3}
+            className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
+            rows={2}
             placeholder={field.placeholder || ''}
           />
         );
@@ -133,7 +133,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
             required={field.required}
             value={value}
             onChange={(e) => setCustomFieldValues({ ...customFieldValues, [field.id]: e.target.value })}
-            className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
+            className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
           >
             <option value="">Select an option</option>
             {field.options?.map((option: string) => (
@@ -151,7 +151,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
             required={field.required}
             value={value}
             onChange={(e) => setCustomFieldValues({ ...customFieldValues, [field.id]: e.target.value })}
-            className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
+            className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
             placeholder={field.placeholder || ''}
           />
         );
@@ -290,51 +290,52 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
   }
 
   return (
-    <div className="min-h-screen bg-transparent py-3 px-4 overflow-y-auto">
-      <div className="max-w-3xl mx-auto pb-3">
+    <div className="min-h-screen bg-transparent py-2 px-3 overflow-y-auto">
+      <div className="max-w-3xl mx-auto pb-2">
         {selectedEvent && (
-          <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-md border border-lime-500/30 px-4 py-3 mb-3">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-lime-400 to-lime-300 bg-clip-text text-transparent">{selectedEvent.name}</h2>
-              <div className="flex items-center gap-6 text-sm">
-                <div className="flex items-center gap-2 text-lime-300">
-                  <Calendar size={18} className="text-lime-400" />
-                  <span>{new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}</span>
-                </div>
-                {selectedEvent.location && (
-                  <div className="flex items-center gap-2 text-lime-300">
-                    <MapPin size={18} className="text-lime-400" />
-                    <span>{selectedEvent.location}</span>
-                  </div>
-                )}
+          <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-md border border-lime-500/30 px-4 py-2 mb-2">
+            <div className="text-center">
+              <h2 className="text-lg font-bold text-lime-200 mb-1">Registration for</h2>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-lime-400 to-lime-300 bg-clip-text text-transparent">{selectedEvent.name}</h3>
+            </div>
+            <div className="flex items-center justify-center gap-4 text-xs mt-2">
+              <div className="flex items-center gap-1 text-lime-300">
+                <Calendar size={14} className="text-lime-400" />
+                <span>{new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                })}</span>
               </div>
+              {selectedEvent.location && (
+                <div className="flex items-center gap-1 text-lime-300">
+                  <MapPin size={14} className="text-lime-400" />
+                  <span>{selectedEvent.location}</span>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-900/80 backdrop-blur-sm border border-red-500/50 rounded-xl p-4 mb-3 flex items-start gap-3">
-            <AlertCircle size={20} className="text-red-300 flex-shrink-0 mt-0.5" />
+          <div className="bg-red-900/80 backdrop-blur-sm border border-red-500/50 rounded-xl p-2 mb-2 flex items-start gap-2">
+            <AlertCircle size={16} className="text-red-300 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-red-100 font-semibold mb-1">Registration Error</h3>
-              <p className="text-red-200 text-sm">{error}</p>
-              <p className="text-red-300 text-xs mt-2">Redirecting to home page...</p>
+              <h3 className="text-red-100 font-semibold text-sm">Registration Error</h3>
+              <p className="text-red-200 text-xs">{error}</p>
+              <p className="text-red-300 text-xs mt-1">Redirecting to home page...</p>
             </div>
           </div>
         )}
 
-        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-lime-500/30 p-4 md:p-5">
-          <div className="mb-3">
-            <div className="flex items-center justify-between mb-3">
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-lime-500/30 p-3">
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-2">
               {Array.from({ length: totalSteps }).map((_, index) => (
                 <div key={index} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors ${
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
                         currentStep > index + 1
                           ? 'bg-lime-600 text-white'
                           : currentStep === index + 1
@@ -342,9 +343,9 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                           : 'bg-slate-700 text-slate-400 border border-lime-500/30'
                       }`}
                     >
-                      {currentStep > index + 1 ? <CheckCircle2 size={20} /> : index + 1}
+                      {currentStep > index + 1 ? <CheckCircle2 size={16} /> : index + 1}
                     </div>
-                    <span className="text-xs font-medium text-lime-200 mt-2 text-center">
+                    <span className="text-[10px] font-medium text-lime-200 mt-1 text-center">
                       {index === 0
                         ? 'Basic Info'
                         : index === 1
@@ -356,7 +357,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                   </div>
                   {index < totalSteps - 1 && (
                     <div
-                      className={`h-1 flex-1 mx-2 transition-colors ${
+                      className={`h-1 flex-1 mx-1 transition-colors ${
                         currentStep > index + 1 ? 'bg-lime-600' : 'bg-slate-700'
                       }`}
                     />
@@ -366,17 +367,17 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
             </div>
           </div>
 
-          <form className="space-y-3">
+          <form className="space-y-2">
             {events.length > 1 && currentStep === 1 && (
               <div>
-                <label className="block text-sm font-semibold text-lime-200 mb-2">
+                <label className="block text-xs font-semibold text-lime-200 mb-1">
                   Select Event <span className="text-red-400">*</span>
                 </label>
                 <select
                   required
                   value={selectedEventId}
                   onChange={(e) => setSelectedEventId(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
+                  className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
                 >
                   {events.map(event => (
                     <option key={event.id} value={event.id}>
@@ -389,16 +390,16 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
             {currentStep === 1 && (
               <>
-                <h3 className="text-lg font-bold text-lime-300 mb-3">Basic Information</h3>
+                <h3 className="text-base font-bold text-lime-300 mb-2">Basic Information</h3>
 
                 <div>
-                  <label className="block text-sm font-semibold text-lime-200 mb-2">
+                  <label className="block text-xs font-semibold text-lime-200 mb-1">
                     Salutation
                   </label>
                   <select
                     value={formData.salutation}
                     onChange={(e) => setFormData({ ...formData, salutation: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
+                    className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
                   >
                     <option value="">Select salutation</option>
                     <option value="Mr.">Mr.</option>
@@ -410,10 +411,10 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                   </select>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {isFieldActive('first_name') && (
                     <div>
-                      <label className="block text-sm font-semibold text-lime-200 mb-2">
+                      <label className="block text-xs font-semibold text-lime-200 mb-1">
                         First Name {isFieldRequired('first_name') && <span className="text-red-400">*</span>}
                       </label>
                       <input
@@ -421,7 +422,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                         required={isFieldRequired('first_name')}
                         value={formData.first_name}
                         onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
+                        className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
                         placeholder="John"
                       />
                     </div>
@@ -429,7 +430,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
                   {isFieldActive('last_name') && (
                     <div>
-                      <label className="block text-sm font-semibold text-lime-200 mb-2">
+                      <label className="block text-xs font-semibold text-lime-200 mb-1">
                         Last Name {isFieldRequired('last_name') && <span className="text-red-400">*</span>}
                       </label>
                       <input
@@ -437,7 +438,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                         required={isFieldRequired('last_name')}
                         value={formData.last_name}
                         onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
+                        className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
                         placeholder="Doe"
                       />
                     </div>
@@ -446,7 +447,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
                 {isFieldActive('email') && (
                   <div>
-                    <label className="block text-sm font-semibold text-lime-200 mb-2">
+                    <label className="block text-xs font-semibold text-lime-200 mb-1">
                       Email Address {isFieldRequired('email') && <span className="text-red-400">*</span>}
                     </label>
                     <input
@@ -454,7 +455,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                       required={isFieldRequired('email')}
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
+                      className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
                       placeholder="john.doe@example.com"
                     />
                   </div>
@@ -464,11 +465,11 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
             {currentStep === 2 && (
               <>
-                <h3 className="text-lg font-bold text-lime-300 mb-3">Contact Information</h3>
+                <h3 className="text-base font-bold text-lime-300 mb-2">Contact Information</h3>
 
                 {isFieldActive('phone') && (
                   <div>
-                    <label className="block text-sm font-semibold text-lime-200 mb-2">
+                    <label className="block text-xs font-semibold text-lime-200 mb-1">
                       Phone Number {isFieldRequired('phone') && <span className="text-red-400">*</span>}
                     </label>
                     <input
@@ -476,7 +477,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                       required={isFieldRequired('phone')}
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
+                      className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
                       placeholder="+233 123 456 7890"
                     />
                   </div>
@@ -484,14 +485,14 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
                 {isFieldActive('gender') && (
                   <div>
-                    <label className="block text-sm font-semibold text-lime-200 mb-2">
+                    <label className="block text-xs font-semibold text-lime-200 mb-1">
                       Gender {isFieldRequired('gender') && <span className="text-red-400">*</span>}
                     </label>
                     <select
                       required={isFieldRequired('gender')}
                       value={formData.gender}
                       onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
+                      className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
                     >
                       <option value="">Select gender</option>
                       <option value="Male">Male</option>
@@ -504,7 +505,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
                 {isFieldActive('organization') && (
                   <div>
-                    <label className="block text-sm font-semibold text-lime-200 mb-2">
+                    <label className="block text-xs font-semibold text-lime-200 mb-1">
                       Company/Organization {isFieldRequired('organization') && <span className="text-red-400">*</span>}
                     </label>
                     <input
@@ -512,7 +513,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                       required={isFieldRequired('organization')}
                       value={formData.organization}
                       onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
+                      className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
                       placeholder="ABC Corporation"
                     />
                   </div>
@@ -522,11 +523,11 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
             {currentStep === 3 && customFields.length > 0 && (
               <>
-                <h3 className="text-lg font-bold text-lime-300 mb-3">Additional Information</h3>
+                <h3 className="text-base font-bold text-lime-300 mb-2">Additional Information</h3>
 
                 {customFields.map((field: any) => (
                   <div key={field.id}>
-                    <label className="block text-sm font-semibold text-lime-200 mb-2">
+                    <label className="block text-xs font-semibold text-lime-200 mb-1">
                       {field.label} {field.required && <span className="text-red-400">*</span>}
                     </label>
                     {renderCustomField(field)}
@@ -537,59 +538,59 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
             {((currentStep === 3 && customFields.length === 0) || (currentStep === 4 && customFields.length > 0)) && (
               <>
-                <h3 className="text-lg font-bold text-lime-300 mb-3">Review and Print Your Badge</h3>
+                <h3 className="text-base font-bold text-lime-300 mb-2">Review and Print Your Badge</h3>
 
-                <div className="bg-slate-700/60 backdrop-blur-sm rounded-lg p-4 space-y-3 border border-lime-500/20">
+                <div className="bg-slate-700/60 backdrop-blur-sm rounded-lg p-2 space-y-2 border border-lime-500/20">
                   {formData.salutation && (
                     <div>
-                      <p className="text-xs font-semibold text-lime-300 mb-1">Salutation</p>
-                      <p className="text-sm text-white font-medium">{formData.salutation}</p>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Salutation</p>
+                      <p className="text-xs text-white font-medium">{formData.salutation}</p>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div>
-                      <p className="text-xs font-semibold text-lime-300 mb-1">First Name</p>
-                      <p className="text-sm text-white font-medium">{formData.first_name}</p>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">First Name</p>
+                      <p className="text-xs text-white font-medium">{formData.first_name}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-lime-300 mb-1">Last Name</p>
-                      <p className="text-sm text-white font-medium">{formData.last_name}</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-lime-300 mb-1">Email</p>
-                    <p className="text-white font-medium">{formData.email}</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-xs font-semibold text-lime-300 mb-1">Phone</p>
-                      <p className="text-sm text-white font-medium">{formData.phone}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-lime-300 mb-1">Gender</p>
-                      <p className="text-sm text-white font-medium">{formData.gender}</p>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Last Name</p>
+                      <p className="text-xs text-white font-medium">{formData.last_name}</p>
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold text-lime-300 mb-1">Company/Organization</p>
-                    <p className="text-white font-medium">{formData.organization}</p>
+                    <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Email</p>
+                    <p className="text-xs text-white font-medium">{formData.email}</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Phone</p>
+                      <p className="text-xs text-white font-medium">{formData.phone}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Gender</p>
+                      <p className="text-xs text-white font-medium">{formData.gender}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Company/Organization</p>
+                    <p className="text-xs text-white font-medium">{formData.organization}</p>
                   </div>
 
                   {customFields.length > 0 && Object.keys(customFieldValues).length > 0 && (
                     <>
-                      <div className="border-t border-lime-500/30 pt-4 mt-4">
-                        <p className="text-sm font-bold text-lime-300 mb-3">Additional Information</p>
+                      <div className="border-t border-lime-500/30 pt-2 mt-2">
+                        <p className="text-xs font-bold text-lime-300 mb-2">Additional Information</p>
                         {customFields.map((field: any) => {
                           const value = customFieldValues[field.id];
                           if (!value) return null;
                           return (
-                            <div key={field.id} className="mb-3">
-                              <p className="text-xs font-semibold text-lime-300 mb-1">{field.label}</p>
-                              <p className="text-sm text-white font-medium">{value}</p>
+                            <div key={field.id} className="mb-2">
+                              <p className="text-[10px] font-semibold text-lime-300 mb-0.5">{field.label}</p>
+                              <p className="text-xs text-white font-medium">{value}</p>
                             </div>
                           );
                         })}
@@ -600,14 +601,14 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
               </>
             )}
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-2 pt-2">
               {currentStep > 1 && (
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border border-lime-500/30 text-lime-300 rounded-lg hover:bg-lime-500/10 transition-colors font-semibold"
+                  className="flex-1 flex items-center justify-center gap-1 px-4 py-2 text-sm border border-lime-500/30 text-lime-300 rounded-lg hover:bg-lime-500/10 transition-colors font-semibold"
                 >
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={16} />
                   Back
                 </button>
               )}
@@ -623,17 +624,17 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                       ? !canProceedStep2()
                       : !canProceedStep3()
                   }
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-lime-600/20"
+                  className="flex-1 flex items-center justify-center gap-1 px-4 py-2 text-sm bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-lime-600/20"
                 >
                   Next
-                  <ChevronRight size={20} />
+                  <ChevronRight size={16} />
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={handleSubmit}
                   disabled={loading || !selectedEventId}
-                  className="flex-1 px-6 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 shadow-lg shadow-lime-600/20"
+                  className="flex-1 px-4 py-2 text-sm bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-lime-600/20"
                 >
                   {loading ? 'Registering...' : 'Complete Registration'}
                 </button>
@@ -642,9 +643,9 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
           </form>
         </div>
 
-        <div className="text-center mt-4 text-lime-200 space-y-1">
-          <p className="text-xs">Your information is secure and will only be used for event purposes.</p>
-          <p className="text-xs text-lime-300">Developed and Built by Asterixify Innovations © 2025</p>
+        <div className="text-center mt-2 text-lime-200 space-y-0.5">
+          <p className="text-[10px]">Your information is secure and will only be used for event purposes.</p>
+          <p className="text-[10px] text-lime-300">Developed and Built by Asterixify Innovations © 2025</p>
         </div>
       </div>
     </div>
