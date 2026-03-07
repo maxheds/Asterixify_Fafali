@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Badge Print Test - Matches React App</title>
+  <style>
+    :root {
+      --badge-width: 80mm;
+      --badge-height: 60mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 50;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      max-width: 672px;
+      width: 100%;
+    }
+
+    .modal-header {
+      margin-bottom: 1.5rem;
+      text-center;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .modal-subtitle {
+      color: #64748b;
+      margin: 0;
+    }
+
+    .badge-container {
+      background: white;
+      border: 4px solid #2563eb;
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .badge-text {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .badge-name {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .badge-org {
+      font-size: 1.25rem;
+      color: #64748b;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .badge-qr-container {
+      display: flex;
+      justify-content: center;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-secondary {
+      background: white;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+
+    .btn-secondary:hover {
+      background: #f8fafc;
+    }
+
+    @media print {
+      @page {
+        size: var(--badge-width) var(--badge-height);
+        margin: 0;
+      }
+
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+      }
+
+      .modal-overlay {
+        position: static !important;
+        background: white !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 100vh !important;
+      }
+
+      .modal-content {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+      }
+
+      .modal-header,
+      .modal-buttons {
+        display: none !important;
+      }
+
+      .badge-container {
+        box-shadow: none !important;
+        padding: 1rem !important;
+      }
+
+      .badge-name {
+        font-size: 1.5rem !important;
+      }
+
+      .badge-org {
+        font-size: 1rem !important;
+      }
+
+      .badge-qr-container img {
+        width: 160px !important;
+        height: 160px !important;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Badge Preview</h3>
+        <p class="modal-subtitle">Click print to generate the badge</p>
+      </div>
+
+      <div>
+        <div class="badge-container">
+          <div class="badge-text">
+            <h3 class="badge-name">Ms. NanaYaa Boakye</h3>
+            <p class="badge-org">MOGMUSIC</p>
+          </div>
+          <div class="badge-qr-container">
+            <img id="qrcode" alt="QR Code" style="width: 192px; height: 192px;" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn btn-primary" onclick="printBadge()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          Print Badge
+        </button>
+        <button class="btn btn-secondary" onclick="alert('This would close the modal in the real app')">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const vcard = `BEGIN:VCARD
+VERSION:3.0
+FN:Ms. NanaYaa Boakye
+N:Boakye;NanaYaa;;Ms.;
+EMAIL:ny_ab77@hotmail.com
+TEL:0552124370
+ORG:MOGMUSIC
+END:VCARD`;
+
+    QRCode.toDataURL(vcard, {
+      width: 200,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      },
+    }).then(url => {
+      document.getElementById('qrcode').src = url;
+    });
+
+    function printBadge() {
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    }
+
+    console.log('Badge test page loaded.');
+    console.log('Print styles will hide the header and buttons, showing only the badge.');
+  </script>
+</body>
+</html>

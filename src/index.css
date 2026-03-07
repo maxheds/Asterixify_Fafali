@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    @apply overflow-hidden bg-transparent;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    position: fixed;
+    overscroll-behavior: none;
+  }
+
+  #root {
+    @apply w-screen h-screen overflow-hidden bg-transparent;
+    position: fixed;
+    inset: 0;
+  }
+}
