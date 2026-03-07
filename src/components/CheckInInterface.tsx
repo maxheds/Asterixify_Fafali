@@ -80,6 +80,7 @@ export function CheckInInterface({ eventId, onBack, onHome, onRegister }: CheckI
           attendee_id: selectedAttendee.id,
           event_id: eventId,
           checked_in_by: 'Self Check-In',
+          app_id: 'default_app',
         }]);
 
       if (event) {

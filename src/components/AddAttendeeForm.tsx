@@ -27,7 +27,7 @@ export function AddAttendeeForm({ eventId, onClose, onSuccess }: AddAttendeeForm
 
     const { error } = await supabase
       .from('attendees')
-      .insert([{ ...formData, event_id: eventId, registration_source: 'onsite' }]);
+      .insert([{ ...formData, event_id: eventId, registration_source: 'onsite', app_id: 'default_app' }]);
 
     setLoading(false);
 

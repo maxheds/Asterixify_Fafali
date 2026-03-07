@@ -105,6 +105,7 @@ export function ImportAttendees({ eventId, onClose, onSuccess }: ImportAttendees
 
         if (isValid) {
           attendee.registration_source = 'imported';
+          attendee.app_id = 'default_app';
           attendees.push(attendee);
         }
       }

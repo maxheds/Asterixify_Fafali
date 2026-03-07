@@ -50,7 +50,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
     } else {
       const { error } = await supabase
         .from('events')
-        .insert([formData]);
+        .insert([{ ...formData, app_id: 'default_app' }]);
 
       setLoading(false);
       if (!error) {
