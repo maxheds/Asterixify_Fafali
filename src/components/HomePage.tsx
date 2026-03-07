@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, LogIn, Settings } from 'lucide-react';
+import { UserPlus, LogIn } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 
@@ -94,11 +94,9 @@ export function HomePage({ onRegister, onCheckIn }: HomePageProps) {
       <div className="fixed bottom-6 left-8" style={{ zIndex: 100 }}>
         <button
           onClick={() => navigate('/admin')}
-          className="group relative bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-black/90 backdrop-blur-md p-3 rounded-full border border-slate-600/50 shadow-2xl hover:border-lime-400/50 transition-all duration-300"
+          className="group relative w-4 h-4 rounded-full bg-gradient-to-br from-slate-700/90 to-slate-900/90 backdrop-blur-md border border-slate-600/50 shadow-2xl hover:border-lime-400/50 hover:from-lime-600/90 hover:to-lime-700/90 transition-all duration-300"
           aria-label="Admin Portal"
-        >
-          <Settings size={24} className="text-slate-400 group-hover:text-lime-400 transition-colors" />
-        </button>
+        />
       </div>
 
       <div className="fixed bottom-6 right-8 md:right-16 lg:right-24" style={{ zIndex: 100 }}>

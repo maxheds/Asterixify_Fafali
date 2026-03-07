@@ -209,66 +209,68 @@ export function CheckInInterface({ eventId, onBack, onHome, onRegister }: CheckI
     }
 
     return (
-      <div className="min-h-screen bg-transparent py-2 px-3">
-        <div className="max-w-lg mx-auto">
-          <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-purple-500/30 p-3">
-            <h2 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent mb-3 text-center">
-              Confirm Your Details
-            </h2>
+      <div className="h-full flex flex-col bg-transparent py-3 px-4">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="max-w-2xl w-full">
+            <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-purple-500/30 p-6">
+              <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent mb-6 text-center">
+                Confirm Your Details
+              </h2>
 
-            <div className="bg-slate-700/60 backdrop-blur-sm rounded-lg p-3 mb-3 space-y-2 border border-purple-500/20">
-              <div>
-                <p className="text-[10px] font-semibold text-purple-300 mb-0.5">Full Name</p>
-                <p className="text-sm text-white font-semibold">
-                  {selectedAttendee.first_name} {selectedAttendee.last_name}
-                </p>
+              <div className="bg-slate-700/60 backdrop-blur-sm rounded-lg p-5 mb-6 space-y-4 border border-purple-500/20">
+                <div>
+                  <p className="text-xs font-semibold text-purple-300 mb-1">Full Name</p>
+                  <p className="text-base sm:text-lg text-white font-semibold">
+                    {selectedAttendee.first_name} {selectedAttendee.last_name}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-purple-300 mb-1">Email</p>
+                  <p className="text-sm sm:text-base text-white">{selectedAttendee.email}</p>
+                </div>
+
+                {selectedAttendee.phone && (
+                  <div>
+                    <p className="text-xs font-semibold text-purple-300 mb-1">Phone</p>
+                    <p className="text-sm sm:text-base text-white">{selectedAttendee.phone}</p>
+                  </div>
+                )}
+
+                {selectedAttendee.organization && (
+                  <div>
+                    <p className="text-xs font-semibold text-purple-300 mb-1">Company/Organization</p>
+                    <p className="text-sm sm:text-base text-white">{selectedAttendee.organization}</p>
+                  </div>
+                )}
+
+                {selectedAttendee.ticket_type && (
+                  <div>
+                    <p className="text-xs font-semibold text-purple-300 mb-1">Ticket Type</p>
+                    <p className="text-sm sm:text-base text-white">{selectedAttendee.ticket_type}</p>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <p className="text-[10px] font-semibold text-purple-300 mb-0.5">Email</p>
-                <p className="text-xs text-white">{selectedAttendee.email}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleReset}
+                  className="flex-1 px-6 py-3 text-base bg-slate-700 border border-purple-500/30 text-purple-300 rounded-lg hover:bg-slate-600 transition-colors font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmCheckIn}
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 text-base bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 shadow-lg shadow-lime-600/20"
+                >
+                  {loading ? 'Checking In...' : 'Confirm Check-In'}
+                </button>
               </div>
-
-              {selectedAttendee.phone && (
-                <div>
-                  <p className="text-[10px] font-semibold text-purple-300 mb-0.5">Phone</p>
-                  <p className="text-xs text-white">{selectedAttendee.phone}</p>
-                </div>
-              )}
-
-              {selectedAttendee.organization && (
-                <div>
-                  <p className="text-[10px] font-semibold text-purple-300 mb-0.5">Company/Organization</p>
-                  <p className="text-xs text-white">{selectedAttendee.organization}</p>
-                </div>
-              )}
-
-              {selectedAttendee.ticket_type && (
-                <div>
-                  <p className="text-[10px] font-semibold text-purple-300 mb-0.5">Ticket Type</p>
-                  <p className="text-xs text-white">{selectedAttendee.ticket_type}</p>
-                </div>
-              )}
             </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={handleReset}
-                className="flex-1 px-4 py-2 text-sm bg-slate-700 border border-purple-500/30 text-purple-300 rounded-lg hover:bg-slate-600 transition-colors font-semibold"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmCheckIn}
-                disabled={loading}
-                className="flex-1 px-4 py-2 text-sm bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 shadow-lg shadow-lime-600/20"
-              >
-                {loading ? 'Checking In...' : 'Confirm Check-In'}
-              </button>
+            <div className="text-center mt-3 text-purple-200 space-y-1">
+              <p className="text-xs text-purple-300">Developed and Built by Asterixify Innovations © 2025</p>
             </div>
-          </div>
-          <div className="text-center mt-2 text-purple-200 space-y-0.5">
-            <p className="text-[10px] text-purple-300">Developed and Built by Asterixify Innovations © 2025</p>
           </div>
         </div>
       </div>
@@ -276,103 +278,105 @@ export function CheckInInterface({ eventId, onBack, onHome, onRegister }: CheckI
   }
 
   return (
-    <div className="min-h-screen bg-transparent py-2 px-3">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-purple-500/30 p-3">
-          <div className="mb-3 text-center">
-            <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent mb-1">
-              Welcome to {event.name}
-            </h2>
-            <p className="text-xs text-purple-200">
-              Please enter your name, email, or phone number to check in
-            </p>
-          </div>
-
-          <div className="mb-3">
-            <div className="relative mb-2">
-              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" />
-              <input
-                type="text"
-                placeholder="Enter your name, email, or phone..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full pl-10 pr-3 py-2 text-sm bg-slate-700/80 border border-purple-500/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-white placeholder-slate-400"
-                autoFocus
-              />
+    <div className="h-full flex flex-col bg-transparent py-3 px-4">
+      <div className="flex-1 flex items-center justify-center">
+        <div className="max-w-3xl w-full">
+          <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-purple-500/30 p-4 sm:p-6">
+            <div className="mb-4 text-center">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent mb-2">
+                Welcome to {event.name}
+              </h2>
+              <p className="text-sm sm:text-base text-purple-200">
+                Please enter your name, email, or phone number to check in
+              </p>
             </div>
-            <button
-              onClick={handleSearch}
-              disabled={!searchQuery.trim() || loading}
-              className="w-full px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold disabled:opacity-50 shadow-lg shadow-purple-600/20"
-            >
-              {loading ? 'Searching...' : 'Search'}
-            </button>
-          </div>
 
-          {searchResults.length > 0 && (
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              <h3 className="text-sm font-semibold text-purple-300 mb-2">Select Your Name:</h3>
-              {searchResults.map((attendee) => (
-                <button
-                  key={attendee.id}
-                  onClick={() => handleSelectAttendee(attendee)}
-                  className={`w-full p-3 rounded-lg border transition-all text-left ${
-                    attendee.checked_in
-                      ? 'bg-lime-900/30 border-lime-500/50'
-                      : 'bg-slate-700/60 border-purple-500/30 hover:border-purple-500 hover:shadow-md'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-bold text-sm text-white">
-                        {attendee.first_name} {attendee.last_name}
-                      </div>
-                      <div className="text-xs text-purple-200">{attendee.email}</div>
-                      {attendee.organization && (
-                        <div className="text-xs text-purple-200">{attendee.organization}</div>
-                      )}
-                    </div>
-                    {attendee.checked_in && (
-                      <div className="bg-lime-600/80 px-2 py-0.5 rounded-full">
-                        <span className="text-[10px] font-semibold text-white">CHECKED IN</span>
-                      </div>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {searchQuery && searchResults.length === 0 && !loading && (
-            <div className="text-center py-4">
-              <p className="text-purple-200 mb-1 font-medium text-sm">No registration found matching your search.</p>
-              <p className="text-xs text-purple-300 mb-3">Please check your spelling or contact event staff for assistance.</p>
-              {onRegister && (
-                <button
-                  onClick={onRegister}
-                  className="px-4 py-2 text-sm bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold shadow-md"
-                >
-                  Register for Event
-                </button>
-              )}
-            </div>
-          )}
-
-          {onHome && (
-            <div className="mt-3 text-center">
+            <div className="mb-4">
+              <div className="relative mb-3">
+                <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" />
+                <input
+                  type="text"
+                  placeholder="Enter your name, email, or phone..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  className="w-full pl-10 pr-3 py-3 text-base bg-slate-700/80 border border-purple-500/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-white placeholder-slate-400"
+                  autoFocus
+                />
+              </div>
               <button
-                onClick={onHome}
-                className="text-purple-300 hover:text-purple-200 font-medium text-xs"
+                onClick={handleSearch}
+                disabled={!searchQuery.trim() || loading}
+                className="w-full px-4 py-3 text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold disabled:opacity-50 shadow-lg shadow-purple-600/20"
               >
-                ← Back to Home
+                {loading ? 'Searching...' : 'Search'}
               </button>
             </div>
-          )}
-        </div>
-        <div className="text-center mt-2 text-purple-200 space-y-0.5">
-          <p className="text-[10px]">Your information is secure and will only be used for event purposes.</p>
-          <p className="text-[10px] text-purple-300">Developed and Built by Asterixify Innovations © 2025</p>
+
+            {searchResults.length > 0 && (
+              <div className="space-y-2 max-h-[40vh] overflow-y-auto">
+                <h3 className="text-base font-semibold text-purple-300 mb-2">Select Your Name:</h3>
+                {searchResults.map((attendee) => (
+                  <button
+                    key={attendee.id}
+                    onClick={() => handleSelectAttendee(attendee)}
+                    className={`w-full p-4 rounded-lg border transition-all text-left ${
+                      attendee.checked_in
+                        ? 'bg-lime-900/30 border-lime-500/50'
+                        : 'bg-slate-700/60 border-purple-500/30 hover:border-purple-500 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-base text-white">
+                          {attendee.first_name} {attendee.last_name}
+                        </div>
+                        <div className="text-sm text-purple-200">{attendee.email}</div>
+                        {attendee.organization && (
+                          <div className="text-sm text-purple-200">{attendee.organization}</div>
+                        )}
+                      </div>
+                      {attendee.checked_in && (
+                        <div className="bg-lime-600/80 px-3 py-1 rounded-full">
+                          <span className="text-xs font-semibold text-white">CHECKED IN</span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {searchQuery && searchResults.length === 0 && !loading && (
+              <div className="text-center py-6">
+                <p className="text-purple-200 mb-2 font-medium text-base">No registration found matching your search.</p>
+                <p className="text-sm text-purple-300 mb-4">Please check your spelling or contact event staff for assistance.</p>
+                {onRegister && (
+                  <button
+                    onClick={onRegister}
+                    className="px-6 py-3 text-base bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold shadow-md"
+                  >
+                    Register for Event
+                  </button>
+                )}
+              </div>
+            )}
+
+            {onHome && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={onHome}
+                  className="text-purple-300 hover:text-purple-200 font-medium text-sm"
+                >
+                  ← Back to Home
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="text-center mt-3 text-purple-200 space-y-1">
+            <p className="text-xs">Your information is secure and will only be used for event purposes.</p>
+            <p className="text-xs text-purple-300">Developed and Built by Asterixify Innovations © 2025</p>
+          </div>
         </div>
       </div>
     </div>

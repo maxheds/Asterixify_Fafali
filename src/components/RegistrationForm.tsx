@@ -291,46 +291,47 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
   }
 
   return (
-    <div className="min-h-screen bg-transparent py-2 px-3 overflow-y-auto">
-      <div className="max-w-3xl mx-auto pb-2">
-        {selectedEvent && (
-          <div className="flex items-center justify-center gap-4 text-xs mb-2">
-            <div className="flex items-center gap-1 text-lime-300">
-              <Calendar size={14} className="text-lime-400" />
-              <span>{new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-              })}</span>
-            </div>
-            {selectedEvent.location && (
-              <div className="flex items-center gap-1 text-lime-300">
-                <MapPin size={14} className="text-lime-400" />
-                <span>{selectedEvent.location}</span>
+    <div className="h-full flex flex-col bg-transparent py-3 px-4">
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto pb-3">
+          {selectedEvent && (
+            <div className="flex items-center justify-center gap-4 text-sm mb-3">
+              <div className="flex items-center gap-2 text-lime-300">
+                <Calendar size={16} className="text-lime-400" />
+                <span>{new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                })}</span>
               </div>
-            )}
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-900/80 backdrop-blur-sm border border-red-500/50 rounded-xl p-2 mb-2 flex items-start gap-2">
-            <AlertCircle size={16} className="text-red-300 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-red-100 font-semibold text-sm">Registration Error</h3>
-              <p className="text-red-200 text-xs">{error}</p>
-              <p className="text-red-300 text-xs mt-1">Redirecting to home page...</p>
+              {selectedEvent.location && (
+                <div className="flex items-center gap-2 text-lime-300">
+                  <MapPin size={16} className="text-lime-400" />
+                  <span>{selectedEvent.location}</span>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-lime-500/30 p-3">
-          <div className="mb-2">
-            <div className="flex items-center justify-between mb-2">
+          {error && (
+            <div className="bg-red-900/80 backdrop-blur-sm border border-red-500/50 rounded-xl p-3 mb-3 flex items-start gap-2">
+              <AlertCircle size={18} className="text-red-300 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-red-100 font-semibold text-base">Registration Error</h3>
+                <p className="text-red-200 text-sm">{error}</p>
+                <p className="text-red-300 text-sm mt-1">Redirecting to home page...</p>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-lime-500/30 p-4 sm:p-5">
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-3">
               {Array.from({ length: totalSteps }).map((_, index) => (
                 <div key={index} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+                      className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm sm:text-base font-bold transition-colors ${
                         currentStep > index + 1
                           ? 'bg-lime-600 text-white'
                           : currentStep === index + 1
@@ -338,9 +339,9 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                           : 'bg-slate-700 text-slate-400 border border-lime-500/30'
                       }`}
                     >
-                      {currentStep > index + 1 ? <CheckCircle2 size={16} /> : index + 1}
+                      {currentStep > index + 1 ? <CheckCircle2 size={18} /> : index + 1}
                     </div>
-                    <span className="text-[10px] font-medium text-lime-200 mt-1 text-center">
+                    <span className="text-xs sm:text-sm font-medium text-lime-200 mt-1.5 text-center">
                       {index === 0
                         ? 'Basic Info'
                         : index === 1
@@ -362,7 +363,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
             </div>
           </div>
 
-          <form className="space-y-2">
+            <form className="space-y-3">
             {events.length > 1 && currentStep === 1 && (
               <div>
                 <label className="block text-xs font-semibold text-lime-200 mb-1">
@@ -383,9 +384,9 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
               </div>
             )}
 
-            {currentStep === 1 && (
-              <>
-                <h3 className="text-base font-bold text-lime-300 mb-2">Basic Information</h3>
+              {currentStep === 1 && (
+                <>
+                  <h3 className="text-lg sm:text-xl font-bold text-lime-300 mb-3">Basic Information</h3>
 
                 <div>
                   <label className="block text-xs font-semibold text-lime-200 mb-1">
@@ -458,9 +459,9 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
               </>
             )}
 
-            {currentStep === 2 && (
-              <>
-                <h3 className="text-base font-bold text-lime-300 mb-2">Contact Information</h3>
+              {currentStep === 2 && (
+                <>
+                  <h3 className="text-lg sm:text-xl font-bold text-lime-300 mb-3">Contact Information</h3>
 
                 {isFieldActive('phone') && (
                   <div>
@@ -516,9 +517,9 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
               </>
             )}
 
-            {currentStep === 3 && customFields.length > 0 && (
-              <>
-                <h3 className="text-base font-bold text-lime-300 mb-2">Additional Information</h3>
+              {currentStep === 3 && customFields.length > 0 && (
+                <>
+                  <h3 className="text-lg sm:text-xl font-bold text-lime-300 mb-3">Additional Information</h3>
 
                 {customFields.map((field: any) => (
                   <div key={field.id}>
@@ -531,9 +532,9 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
               </>
             )}
 
-            {((currentStep === 3 && customFields.length === 0) || (currentStep === 4 && customFields.length > 0)) && (
-              <>
-                <h3 className="text-base font-bold text-lime-300 mb-2">Review and Print Your Badge</h3>
+              {((currentStep === 3 && customFields.length === 0) || (currentStep === 4 && customFields.length > 0)) && (
+                <>
+                  <h3 className="text-lg sm:text-xl font-bold text-lime-300 mb-3">Review and Print Your Badge</h3>
 
                 <div className="bg-slate-700/60 backdrop-blur-sm rounded-lg p-2 space-y-2 border border-lime-500/20">
                   {formData.salutation && (
@@ -596,51 +597,52 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
               </>
             )}
 
-            <div className="flex gap-2 pt-2">
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="flex-1 flex items-center justify-center gap-1 px-4 py-2 text-sm border border-lime-500/30 text-lime-300 rounded-lg hover:bg-lime-500/10 transition-colors font-semibold"
-                >
-                  <ChevronLeft size={16} />
-                  Back
-                </button>
-              )}
+              <div className="flex gap-3 pt-3">
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-base border border-lime-500/30 text-lime-300 rounded-lg hover:bg-lime-500/10 transition-colors font-semibold"
+                  >
+                    <ChevronLeft size={18} />
+                    Back
+                  </button>
+                )}
 
-              {currentStep < totalSteps ? (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  disabled={
-                    currentStep === 1
-                      ? !canProceedStep1
-                      : currentStep === 2
-                      ? !canProceedStep2()
-                      : !canProceedStep3()
-                  }
-                  className="flex-1 flex items-center justify-center gap-1 px-4 py-2 text-sm bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-lime-600/20"
-                >
-                  Next
-                  <ChevronRight size={16} />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={loading || !selectedEventId}
-                  className="flex-1 px-4 py-2 text-sm bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-lime-600/20"
-                >
-                  {loading ? 'Registering...' : 'Complete Registration'}
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
+                {currentStep < totalSteps ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={
+                      currentStep === 1
+                        ? !canProceedStep1
+                        : currentStep === 2
+                        ? !canProceedStep2()
+                        : !canProceedStep3()
+                    }
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-base bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-lime-600/20"
+                  >
+                    Next
+                    <ChevronRight size={18} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={loading || !selectedEventId}
+                    className="flex-1 px-4 py-3 text-base bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-lime-600/20"
+                  >
+                    {loading ? 'Registering...' : 'Complete Registration'}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
 
-        <div className="text-center mt-2 text-lime-200 space-y-0.5">
-          <p className="text-[10px]">Your information is secure and will only be used for event purposes.</p>
-          <p className="text-[10px] text-lime-300">Developed and Built by Asterixify Innovations © 2025</p>
+          <div className="text-center mt-3 text-lime-200 space-y-1">
+            <p className="text-xs">Your information is secure and will only be used for event purposes.</p>
+            <p className="text-xs text-lime-300">Developed and Built by Asterixify Innovations © 2025</p>
+          </div>
         </div>
       </div>
     </div>
