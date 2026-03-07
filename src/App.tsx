@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { CheckInInterface } from './components/CheckInInterface';
 import { RegistrationForm } from './components/RegistrationForm';
 import { CheckInEventSelector } from './components/CheckInEventSelector';
@@ -74,6 +75,7 @@ function App() {
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <Analytics />
     </BrowserRouter>
   );
 }
