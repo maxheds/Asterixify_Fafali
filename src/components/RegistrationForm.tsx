@@ -67,8 +67,8 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
         registration_source: 'online',
         form_data: customFieldValues,
       })
-      .select('*')
-      .single();
+      .select()
+      .maybeSingle();
 
     setLoading(false);
 
