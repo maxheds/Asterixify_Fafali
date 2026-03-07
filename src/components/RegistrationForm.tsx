@@ -66,6 +66,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
         event_id: selectedEventId,
         registration_source: 'online',
         form_data: customFieldValues,
+        app_id: 'default_app',
       })
       .select()
       .maybeSingle();

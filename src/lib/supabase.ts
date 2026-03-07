@@ -15,4 +15,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(`Missing Supabase environment variables. URL: ${!!supabaseUrl}, Key: ${!!supabaseAnonKey}`);
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  global: {
+    headers: {
+      'x-app-id': 'default_app'
+    }
+  }
+});
