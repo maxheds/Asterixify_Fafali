@@ -14,10 +14,17 @@ type ModalMode = 'none' | 'register' | 'checkin';
 function App() {
   const [modalMode, setModalMode] = useState<ModalMode>('none');
   const [selectedEventId, setSelectedEventId] = useState<string>('');
+  const [activeEventName, setActiveEventName] = useState<string>('Event');
 
   useEffect(() => {
     if (modalMode === 'checkin' && !selectedEventId) {
       loadActiveEvent();
+    }
+  }, [modalMode]);
+
+  useEffect(() => {
+    if (modalMode === 'register') {
+      loadActiveEventForRegistration();
     }
   }, [modalMode]);
 
@@ -32,6 +39,20 @@ function App() {
 
     if (!error && data) {
       setSelectedEventId(data.id);
+    }
+  };
+
+  const loadActiveEventForRegistration = async () => {
+    const { data, error } = await supabase
+      .from('events')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('event_date', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (!error && data) {
+      setActiveEventName(data.name);
     }
   };
 
@@ -69,7 +90,7 @@ function App() {
             <Modal
               isOpen={modalMode === 'register'}
               onClose={closeModal}
-              title="Registration for Event"
+              title={`Registration for ${activeEventName}`}
               size="large"
             >
               <RegistrationForm onSuccess={closeModal} />
