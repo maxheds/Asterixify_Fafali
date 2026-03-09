@@ -641,7 +641,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
           <div className="text-center mt-3 text-lime-200 space-y-1">
             <p className="text-xs">Your information is secure and will only be used for event purposes.</p>
-            <p className="text-xs text-lime-300">Developed and Built by Asterixify Innovations © 2025</p>
+            <p className="text-xs text-lime-300">Developed and Built by Asterixify Innovations © 2026</p>
           </div>
         </div>
       </div>
