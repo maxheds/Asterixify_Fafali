@@ -269,7 +269,7 @@ export function CheckInInterface({ eventId, onBack, onHome, onRegister }: CheckI
               </div>
             </div>
             <div className="text-center mt-3 text-purple-200 space-y-1">
-              <p className="text-xs text-purple-300">Developed and Built by Asterixify Innovations © 2025</p>
+              <p className="text-xs text-purple-300">Developed and Built by Asterixify Innovations © 2026</p>
             </div>
           </div>
         </div>
