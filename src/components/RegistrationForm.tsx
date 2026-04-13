@@ -4,6 +4,7 @@ import { Event, Attendee } from '../lib/database.types';
 import { Calendar, MapPin, CheckCircle2, ChevronRight, ChevronLeft, AlertCircle } from 'lucide-react';
 import { Badge } from './Badge';
 import { sendRegistrationEmail } from '../lib/emailService';
+import { sendRegistrationSMS, isEmailEnabled } from '../lib/smsService';
 
 interface RegistrationFormProps {
   onSuccess?: () => void;
@@ -59,6 +60,20 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     setLoading(true);
     setError('');
 
+    // Duplicate attendee check — same email in the same event
+    const { data: existing } = await supabase
+      .from('attendees')
+      .select('id')
+      .eq('event_id', selectedEventId)
+      .eq('email', formData.email.trim().toLowerCase())
+      .maybeSingle();
+
+    if (existing) {
+      setError('This email address is already registered for this event. Please check your inbox for your confirmation email.');
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from('attendees')
       .insert({
@@ -88,20 +103,30 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
       setSubmitted(true);
 
       if (selectedEvent) {
-        await sendRegistrationEmail({
-          salutation: data.salutation,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          to_email: data.email,
-          event_name: selectedEvent.name,
-          event_date: new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }),
-          event_location: selectedEvent.location || 'TBA',
+        const eventDate = new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
         });
+        const emailOn = await isEmailEnabled();
+        await Promise.all([
+          emailOn
+            ? sendRegistrationEmail({
+                salutation: data.salutation,
+                first_name: data.first_name,
+                last_name: data.last_name,
+                to_email: data.email,
+                event_name: selectedEvent.name,
+                event_date: eventDate,
+                event_location: selectedEvent.location || 'TBA',
+              })
+            : Promise.resolve(),
+          sendRegistrationSMS({
+            first_name: data.first_name,
+            phone: data.phone || '',
+            event_name: selectedEvent.name,
+            event_date: eventDate,
+            event_location: selectedEvent.location || 'TBA',
+          }),
+        ]);
       }
 
       setTimeout(() => {

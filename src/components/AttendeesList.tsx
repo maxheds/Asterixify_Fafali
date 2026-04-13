@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Attendee, Event } from '../lib/database.types';
-import { Search, CheckCircle2, Circle, Plus, Trash2, Printer, Edit2, RefreshCw } from 'lucide-react';
+import { Search, CheckCircle2, Circle, Plus, Trash2, Printer, Edit2, RefreshCw, ChevronLeft, ChevronRight, Bell } from 'lucide-react';
 import { AddAttendeeForm } from './AddAttendeeForm';
 import { Badge } from './Badge';
-import { sendCheckInEmail } from '../lib/emailService';
+import { sendCheckInEmail, sendRegistrationEmail } from '../lib/emailService';
+import { sendCheckInSMS, sendRegistrationSMS, isEmailEnabled } from '../lib/smsService';
 
 interface AttendeesListProps {
   eventId: string;
@@ -20,6 +21,8 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
   const [selectedAttendee, setSelectedAttendee] = useState<Attendee | null>(null);
   const [showBadge, setShowBadge] = useState(false);
   const [editingAttendee, setEditingAttendee] = useState<Attendee | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 50;
 
   useEffect(() => {
     loadEvent();
@@ -51,6 +54,7 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
         )
       );
     }
+    setCurrentPage(1);
   }, [searchQuery, attendees]);
 
   const loadEvent = async () => {
@@ -342,24 +346,60 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
 
     if (!error) {
       if (newStatus && event) {
-        await sendCheckInEmail({
-          salutation: attendee.salutation || '',
-          first_name: attendee.first_name,
-          last_name: attendee.last_name,
-          to_email: attendee.email,
-          event_name: event.name,
-          checked_in_at: new Date().toLocaleString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-          }),
+        const checkedInAt = new Date().toLocaleString('en-US', {
+          weekday: 'long', year: 'numeric', month: 'long',
+          day: 'numeric', hour: 'numeric', minute: '2-digit',
         });
+        const emailOn = await isEmailEnabled();
+        await Promise.all([
+          emailOn
+            ? sendCheckInEmail({
+                salutation: attendee.salutation || '',
+                first_name: attendee.first_name,
+                last_name: attendee.last_name,
+                to_email: attendee.email,
+                event_name: event.name,
+                checked_in_at: checkedInAt,
+              })
+            : Promise.resolve(),
+          sendCheckInSMS({
+            first_name: attendee.first_name,
+            phone: attendee.phone || '',
+            event_name: event.name,
+            checked_in_at: checkedInAt,
+          }),
+        ]);
       }
       loadAttendees();
     }
+  };
+
+  const resendNotification = async (attendee: Attendee) => {
+    if (!event) return;
+    const eventDate = new Date(event.event_date).toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+    const emailOn = await isEmailEnabled();
+    await Promise.all([
+      emailOn
+        ? sendRegistrationEmail({
+            salutation: attendee.salutation || '',
+            first_name: attendee.first_name,
+            last_name: attendee.last_name,
+            to_email: attendee.email,
+            event_name: event.name,
+            event_date: eventDate,
+            event_location: event.location || 'TBA',
+          })
+        : Promise.resolve(),
+      sendRegistrationSMS({
+        first_name: attendee.first_name,
+        phone: attendee.phone || '',
+        event_name: event.name,
+        event_date: eventDate,
+        event_location: event.location || 'TBA',
+      }),
+    ]);
   };
 
   const saveEdit = async (attendee: Attendee) => {
@@ -420,13 +460,16 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden flex flex-col">
         {filteredAttendees.length === 0 ? (
           <div className="text-center py-12 text-slate-500">
             {searchQuery ? 'No attendees found matching your search.' : 'No attendees yet. Import or add attendees to get started.'}
           </div>
-        ) : (
-          <div className="border border-slate-200 rounded-lg overflow-hidden h-full flex flex-col">
+        ) : (() => {
+          const totalPages = Math.ceil(filteredAttendees.length / PAGE_SIZE);
+          const pageAttendees = filteredAttendees.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+          return (
+          <div className="border border-slate-200 rounded-lg overflow-hidden flex flex-col flex-1">
             <div className="overflow-y-auto flex-1">
               <table className="w-full border-collapse">
                 <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
@@ -452,7 +495,7 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">
-                  {filteredAttendees.map((attendee) => (
+                  {pageAttendees.map((attendee) => (
                     <tr key={attendee.id} className="hover:bg-slate-50 transition-colors">
                       {(isFieldActive('first_name') || isFieldActive('last_name')) && (
                         <td className="px-2 py-2 max-w-[140px]">
@@ -496,6 +539,13 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
                       <td className="px-2 py-2 max-w-[100px]">
                         <div className="flex items-center justify-end gap-1">
                           <button
+                            onClick={() => resendNotification(attendee)}
+                            className="p-1 text-violet-600 hover:bg-violet-50 rounded transition-colors"
+                            title="Resend registration email & SMS"
+                          >
+                            <Bell size={12} />
+                          </button>
+                          <button
                             onClick={() => showBadgePreview(attendee)}
                             className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                             title="Print Badge"
@@ -534,13 +584,41 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50 flex-shrink-0">
+                <span className="text-xs text-slate-500">
+                  Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredAttendees.length)} of {filteredAttendees.length}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="text-xs font-medium text-slate-700 px-2">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+          );
+        })()}
       </div>
 
       {showAddForm && (
         <AddAttendeeForm
           eventId={eventId}
+          event={event}
           onClose={() => setShowAddForm(false)}
           onSuccess={() => {
             setShowAddForm(false);

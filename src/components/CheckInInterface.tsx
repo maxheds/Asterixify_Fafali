@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Event, Attendee } from '../lib/database.types';
 import { Search, CheckCircle2, ArrowLeft, Home, User } from 'lucide-react';
 import { sendCheckInEmail } from '../lib/emailService';
+import { sendCheckInSMS, isEmailEnabled } from '../lib/smsService';
 
 interface CheckInInterfaceProps {
   eventId: string;
@@ -84,21 +85,29 @@ export function CheckInInterface({ eventId, onBack, onHome, onRegister }: CheckI
         }]);
 
       if (event) {
-        await sendCheckInEmail({
-          salutation: selectedAttendee.salutation || '',
-          first_name: selectedAttendee.first_name,
-          last_name: selectedAttendee.last_name,
-          to_email: selectedAttendee.email,
-          event_name: event.name,
-          checked_in_at: new Date().toLocaleString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-          }),
+        const checkedInAt = new Date().toLocaleString('en-US', {
+          weekday: 'long', year: 'numeric', month: 'long',
+          day: 'numeric', hour: 'numeric', minute: '2-digit',
         });
+        const emailOn = await isEmailEnabled();
+        await Promise.all([
+          emailOn
+            ? sendCheckInEmail({
+                salutation: selectedAttendee.salutation || '',
+                first_name: selectedAttendee.first_name,
+                last_name: selectedAttendee.last_name,
+                to_email: selectedAttendee.email,
+                event_name: event.name,
+                checked_in_at: checkedInAt,
+              })
+            : Promise.resolve(),
+          sendCheckInSMS({
+            first_name: selectedAttendee.first_name,
+            phone: selectedAttendee.phone || '',
+            event_name: event.name,
+            checked_in_at: checkedInAt,
+          }),
+        ]);
       }
 
       setCheckInSuccess(true);

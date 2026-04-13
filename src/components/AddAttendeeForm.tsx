@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { sendRegistrationEmail } from '../lib/emailService';
+import { sendRegistrationSMS, isEmailEnabled } from '../lib/smsService';
+import { Event } from '../lib/database.types';
 import { X } from 'lucide-react';
 
 interface AddAttendeeFormProps {
   eventId: string;
+  event?: Event | null;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function AddAttendeeForm({ eventId, onClose, onSuccess }: AddAttendeeFormProps) {
+export function AddAttendeeForm({ eventId, event, onClose, onSuccess }: AddAttendeeFormProps) {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -19,21 +23,48 @@ export function AddAttendeeForm({ eventId, onClose, onSuccess }: AddAttendeeForm
     age_group: '',
     special_requirements: '',
   });
+  const [sendNotification, setSendNotification] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('attendees')
-      .insert([{ ...formData, event_id: eventId, registration_source: 'onsite', app_id: 'default_app' }]);
+      .insert([{ ...formData, event_id: eventId, registration_source: 'onsite', app_id: 'default_app' }])
+      .select()
+      .maybeSingle();
+
+    if (!error && data && sendNotification && event) {
+      const eventDate = new Date(event.event_date).toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      });
+      const emailOn = await isEmailEnabled();
+      await Promise.all([
+        emailOn
+          ? sendRegistrationEmail({
+              salutation: '',
+              first_name: data.first_name,
+              last_name: data.last_name,
+              to_email: data.email,
+              event_name: event.name,
+              event_date: eventDate,
+              event_location: event.location || 'TBA',
+            })
+          : Promise.resolve(),
+        sendRegistrationSMS({
+          first_name: data.first_name,
+          phone: data.phone || '',
+          event_name: event.name,
+          event_date: eventDate,
+          event_location: event.location || 'TBA',
+        }),
+      ]);
+    }
 
     setLoading(false);
-
-    if (!error) {
-      onSuccess();
-    }
+    if (!error) onSuccess();
   };
 
   return (
@@ -115,7 +146,24 @@ export function AddAttendeeForm({ eventId, onClose, onSuccess }: AddAttendeeForm
             </select>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          {event && (
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sendNotification}
+                  onChange={(e) => setSendNotification(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-2 focus:ring-blue-600"
+                />
+                <div>
+                  <p className="text-sm font-medium text-slate-900">Send registration notification</p>
+                  <p className="text-xs text-slate-500">Email + SMS confirmation sent to this attendee</p>
+                </div>
+              </label>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}

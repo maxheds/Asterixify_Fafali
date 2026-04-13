@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { X, Upload, AlertCircle } from 'lucide-react';
 import { sendRegistrationEmail } from '../lib/emailService';
+import { sendRegistrationSMS, isEmailEnabled } from '../lib/smsService';
 
 interface ImportAttendeesProps {
   eventId: string;
@@ -22,6 +23,7 @@ export function ImportAttendees({ eventId, onClose, onSuccess }: ImportAttendees
   const [eventFields, setEventFields] = useState<FormField[]>([]);
   const [successMessage, setSuccessMessage] = useState('');
   const [sendEmails, setSendEmails] = useState(true);
+  const [sendSMSNotif, setSendSMSNotif] = useState(true);
 
   useEffect(() => {
     loadEventFields();
@@ -132,27 +134,44 @@ export function ImportAttendees({ eventId, onClose, onSuccess }: ImportAttendees
           .maybeSingle();
 
         if (eventData && insertedAttendees) {
+          const eventDate = new Date(eventData.event_date).toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+          });
+          const emailOn = sendEmails && (await isEmailEnabled());
           let emailsSent = 0;
-          if (sendEmails) {
-            for (const attendee of insertedAttendees) {
-              const emailSent = await sendRegistrationEmail({
+          let smsSent = 0;
+
+          for (const attendee of insertedAttendees) {
+            const tasks: Promise<boolean>[] = [];
+            if (emailOn) {
+              tasks.push(sendRegistrationEmail({
                 salutation: attendee.salutation || '',
                 first_name: attendee.first_name,
                 last_name: attendee.last_name,
                 to_email: attendee.email,
                 event_name: eventData.name,
-                event_date: new Date(eventData.event_date).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                }),
+                event_date: eventDate,
                 event_location: eventData.location || 'TBA',
-              });
-              if (emailSent) emailsSent++;
+              }));
             }
+            if (sendSMSNotif) {
+              tasks.push(sendRegistrationSMS({
+                first_name: attendee.first_name,
+                phone: attendee.phone || '',
+                event_name: eventData.name,
+                event_date: eventDate,
+                event_location: eventData.location || 'TBA',
+              }));
+            }
+            const [eOk, sOk] = await Promise.all(tasks);
+            if (emailOn && eOk) emailsSent++;
+            if (sendSMSNotif && sOk) smsSent++;
           }
-          setSuccessMessage(`Successfully imported ${insertedAttendees.length} attendee(s).${sendEmails ? ` ${emailsSent} registration email(s) sent.` : ''}`);
+
+          const parts = [`Successfully imported ${insertedAttendees.length} attendee(s).`];
+          if (sendEmails)    parts.push(`${emailsSent} email(s) sent.`);
+          if (sendSMSNotif)  parts.push(`${smsSent} SMS sent.`);
+          setSuccessMessage(parts.join(' '));
         }
 
         setTimeout(() => {
@@ -225,7 +244,7 @@ export function ImportAttendees({ eventId, onClose, onSuccess }: ImportAttendees
             </div>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -235,7 +254,19 @@ export function ImportAttendees({ eventId, onClose, onSuccess }: ImportAttendees
               />
               <div>
                 <p className="text-sm font-semibold text-slate-900">Send registration emails</p>
-                <p className="text-xs text-slate-600">Automatically send welcome emails to imported attendees</p>
+                <p className="text-xs text-slate-600">Welcome email sent to each imported attendee</p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={sendSMSNotif}
+                onChange={(e) => setSendSMSNotif(e.target.checked)}
+                className="w-5 h-5 text-green-600 border-slate-300 rounded focus:ring-2 focus:ring-green-600"
+              />
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Send registration SMS</p>
+                <p className="text-xs text-slate-600">SMS sent to attendees who have a phone number</p>
               </div>
             </label>
           </div>
@@ -269,7 +300,9 @@ export function ImportAttendees({ eventId, onClose, onSuccess }: ImportAttendees
 
           {loading && (
             <div className="text-center text-slate-600">
-              {sendEmails ? 'Importing attendees and sending emails...' : 'Importing attendees...'}
+              {sendEmails || sendSMSNotif
+                ? 'Importing attendees and sending notifications...'
+                : 'Importing attendees...'}
             </div>
           )}
 

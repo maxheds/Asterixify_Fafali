@@ -42,6 +42,73 @@ export interface Database {
           updated_at?: string;
         };
       };
+      admin_users: {
+        Row: {
+          id: string;
+          app_id: string;
+          username: string;
+          password_hash: string;
+          salt: string;
+          role: 'master' | 'admin';
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          app_id?: string;
+          username: string;
+          password_hash: string;
+          salt: string;
+          role?: 'master' | 'admin';
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          app_id?: string;
+          username?: string;
+          password_hash?: string;
+          salt?: string;
+          role?: 'master' | 'admin';
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      notification_settings: {
+        Row: {
+          id: string;
+          app_id: string;
+          sms_enabled: boolean;
+          email_enabled: boolean;
+          sms_registration_template: string;
+          sms_checkin_template: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          app_id?: string;
+          sms_enabled?: boolean;
+          email_enabled?: boolean;
+          sms_registration_template?: string;
+          sms_checkin_template?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          app_id?: string;
+          sms_enabled?: boolean;
+          email_enabled?: boolean;
+          sms_registration_template?: string;
+          sms_checkin_template?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       admin_settings: {
         Row: {
           id: string;
@@ -129,7 +196,6 @@ export interface Database {
           checked_in?: boolean;
           checked_in_at?: string | null;
           checked_in_by?: string;
-          checked_in_by?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -170,3 +236,4 @@ export interface Database {
 export type Event = Database['public']['Tables']['events']['Row'];
 export type Attendee = Database['public']['Tables']['attendees']['Row'];
 export type CheckInHistory = Database['public']['Tables']['check_in_history']['Row'];
+export type AdminUser = Database['public']['Tables']['admin_users']['Row'];

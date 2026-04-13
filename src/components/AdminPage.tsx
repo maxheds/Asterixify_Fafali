@@ -8,25 +8,39 @@ import { Modal } from './Modal';
 
 export function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminRole, setAdminRole] = useState<'master' | 'admin'>('admin');
   const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [showCheckInSelector, setShowCheckInSelector] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const authenticated = sessionStorage.getItem('admin_authenticated');
-    if (authenticated === 'true') {
+    const storedUsername = sessionStorage.getItem('admin_username') ?? '';
+    const storedRole = sessionStorage.getItem('admin_role') as 'master' | 'admin' | null;
+    if (authenticated === 'true' && storedUsername) {
       setIsAuthenticated(true);
+      setAdminUsername(storedUsername);
+      setAdminRole(storedRole ?? 'admin');
     }
   }, []);
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (username: string, role: 'master' | 'admin') => {
     sessionStorage.setItem('admin_authenticated', 'true');
+    sessionStorage.setItem('admin_username', username);
+    sessionStorage.setItem('admin_role', role);
+    setAdminUsername(username);
+    setAdminRole(role);
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem('admin_authenticated');
+    sessionStorage.removeItem('admin_username');
+    sessionStorage.removeItem('admin_role');
     setIsAuthenticated(false);
+    setAdminUsername('');
+    setAdminRole('admin');
     navigate('/');
   };
 
@@ -54,7 +68,12 @@ export function AdminPage() {
     <>
       <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         {!selectedEventId ? (
-          <AdminPortal onNavigateToCheckIn={handleNavigateToCheckIn} onLogout={handleLogout} />
+          <AdminPortal
+            onNavigateToCheckIn={handleNavigateToCheckIn}
+            onLogout={handleLogout}
+            adminUsername={adminUsername}
+            adminRole={adminRole}
+          />
         ) : (
           <div className="h-screen overflow-y-auto">
             <CheckInInterface
