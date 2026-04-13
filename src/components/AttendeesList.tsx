@@ -24,6 +24,13 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 50;
 
+  // Resend modal state
+  const [resendTarget, setResendTarget] = useState<Attendee | null>(null);
+  const [resendEmail, setResendEmail] = useState(true);
+  const [resendSMS, setResendSMS] = useState(true);
+  const [resendSending, setResendSending] = useState(false);
+  const [resendDone, setResendDone] = useState('');
+
   useEffect(() => {
     loadEvent();
     loadAttendees();
@@ -374,32 +381,34 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
     }
   };
 
-  const resendNotification = async (attendee: Attendee) => {
+  const resendNotification = async (attendee: Attendee, sendEmailFlag: boolean, sendSMSFlag: boolean) => {
     if (!event) return;
     const eventDate = new Date(event.event_date).toLocaleDateString('en-US', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
     const emailOn = await isEmailEnabled();
-    await Promise.all([
-      emailOn
-        ? sendRegistrationEmail({
-            salutation: attendee.salutation || '',
-            first_name: attendee.first_name,
-            last_name: attendee.last_name,
-            to_email: attendee.email,
-            event_name: event.name,
-            event_date: eventDate,
-            event_location: event.location || 'TBA',
-          })
-        : Promise.resolve(),
-      sendRegistrationSMS({
+    const tasks: Promise<any>[] = [];
+    if (sendEmailFlag && emailOn) {
+      tasks.push(sendRegistrationEmail({
+        salutation: attendee.salutation || '',
+        first_name: attendee.first_name,
+        last_name: attendee.last_name,
+        to_email: attendee.email,
+        event_name: event.name,
+        event_date: eventDate,
+        event_location: event.location || 'TBA',
+      }));
+    }
+    if (sendSMSFlag) {
+      tasks.push(sendRegistrationSMS({
         first_name: attendee.first_name,
         phone: attendee.phone || '',
         event_name: event.name,
         event_date: eventDate,
         event_location: event.location || 'TBA',
-      }),
-    ]);
+      }));
+    }
+    await Promise.all(tasks);
   };
 
   const saveEdit = async (attendee: Attendee) => {
@@ -539,9 +548,9 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
                       <td className="px-2 py-2 max-w-[100px]">
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => resendNotification(attendee)}
+                            onClick={() => { setResendTarget(attendee); setResendEmail(true); setResendSMS(true); setResendDone(''); }}
                             className="p-1 text-violet-600 hover:bg-violet-50 rounded transition-colors"
-                            title="Resend registration email & SMS"
+                            title="Resend notification"
                           >
                             <Bell size={12} />
                           </button>
@@ -745,6 +754,76 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
                 className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-semibold"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {resendTarget && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
+            <h3 className="text-lg font-bold text-slate-900 mb-1">Resend Notification</h3>
+            <p className="text-sm text-slate-500 mb-4">
+              To: <span className="font-medium text-slate-700">{resendTarget.first_name} {resendTarget.last_name}</span>
+            </p>
+
+            <div className="space-y-3 mb-5">
+              <label className="flex items-center gap-3 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg p-3">
+                <input
+                  type="checkbox"
+                  checked={resendEmail}
+                  onChange={(e) => setResendEmail(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-2 focus:ring-blue-600"
+                />
+                <div>
+                  <p className="text-sm font-medium text-slate-900">Send Email</p>
+                  <p className="text-xs text-slate-500">{resendTarget.email}</p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg p-3">
+                <input
+                  type="checkbox"
+                  checked={resendSMS}
+                  onChange={(e) => setResendSMS(e.target.checked)}
+                  className="w-4 h-4 text-green-600 border-slate-300 rounded focus:ring-2 focus:ring-green-600"
+                />
+                <div>
+                  <p className="text-sm font-medium text-slate-900">Send SMS</p>
+                  <p className="text-xs text-slate-500">{resendTarget.phone || 'No phone number on record'}</p>
+                </div>
+              </label>
+            </div>
+
+            {resendDone && (
+              <div className="mb-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                {resendDone}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setResendTarget(null)}
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={resendSending || (!resendEmail && !resendSMS)}
+                onClick={async () => {
+                  setResendSending(true);
+                  await resendNotification(resendTarget, resendEmail, resendSMS);
+                  setResendSending(false);
+                  const parts = [];
+                  if (resendEmail) parts.push('email');
+                  if (resendSMS) parts.push('SMS');
+                  setResendDone(`${parts.join(' & ')} sent successfully.`);
+                  setTimeout(() => setResendTarget(null), 2000);
+                }}
+                className="flex-1 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 text-sm font-semibold"
+              >
+                {resendSending ? 'Sending...' : 'Send'}
               </button>
             </div>
           </div>
