@@ -51,7 +51,10 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
         .eq('id', event.id);
 
       setLoading(false);
-      if (!error) {
+      if (error) {
+        console.error('Update error:', JSON.stringify(error));
+        alert('Update failed: ' + error.message);
+      } else {
         onSuccess();
       }
     } else {
@@ -60,7 +63,10 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
         .insert([{ ...payload, app_id: 'default_app' }]);
 
       setLoading(false);
-      if (!error) {
+      if (error) {
+        console.error('Insert error:', JSON.stringify(error));
+        alert('Create failed: ' + error.message);
+      } else {
         onSuccess();
       }
     }
