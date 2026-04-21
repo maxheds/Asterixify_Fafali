@@ -40,7 +40,7 @@ export function HomePage({ onRegister, onCheckIn }: HomePageProps) {
   };
 
   const backgroundImage = activeEvent?.flyer_url ||
-    '/vision_board_background_tablet_mockup copy copy.png';
+    'https://res.cloudinary.com/dtosbfggh/image/upload/v1776783416/Dr_Kofi_zrmp1e.jpg';
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent">
