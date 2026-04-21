@@ -76,6 +76,8 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
     }
   };
 
+  const DEFAULT_FIELD_IDS = ['first_name','last_name','email','phone','gender','organization'];
+
   const getActiveFields = () => {
     if (!event || !event.custom_fields) return [];
     return event.custom_fields.filter((f: any) => f.active !== false);
@@ -85,6 +87,11 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
     const activeFields = getActiveFields();
     if (activeFields.length === 0) return true;
     return activeFields.some((f: any) => f.id === fieldId);
+  };
+
+  const getActiveCustomFields = () => {
+    if (!event || !event.custom_fields) return [];
+    return event.custom_fields.filter((f: any) => f.active !== false && !DEFAULT_FIELD_IDS.includes(f.id));
   };
 
   const showBadgePreview = (attendee: Attendee) => {
@@ -498,6 +505,9 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
                     {isFieldActive('organization') && (
                       <th className="text-left px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-50 max-w-[100px]">Organization</th>
                     )}
+                    {getActiveCustomFields().map((field: any) => (
+                      <th key={field.id} className="text-left px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-50 max-w-[120px]">{field.label}</th>
+                    ))}
                     <th className="text-left px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-50 max-w-[80px]">Ticket</th>
                     <th className="text-left px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-50 max-w-[80px]">Status</th>
                     <th className="text-right px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-50 max-w-[100px]">Actions</th>
@@ -527,6 +537,11 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
                           {attendee.organization || '-'}
                         </td>
                       )}
+                      {getActiveCustomFields().map((field: any) => (
+                        <td key={field.id} className="px-2 py-2 text-slate-600 text-sm max-w-[120px] truncate" title={(attendee as any).form_data?.[field.id] || '-'}>
+                          {(attendee as any).form_data?.[field.id] || '-'}
+                        </td>
+                      ))}
                       <td className="px-2 py-2 max-w-[80px]">
                         <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs inline-block truncate max-w-full" title={attendee.ticket_type}>
                           {attendee.ticket_type}

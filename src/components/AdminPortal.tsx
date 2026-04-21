@@ -6,7 +6,7 @@ import { Event, Attendee } from '../lib/database.types';
 import {
   Plus, Calendar, Download, Upload, Settings, Edit2, BarChart3,
   Filter, Trash2, Users, KeyRound, Eye, EyeOff, AlertCircle,
-  CheckCircle2, MessageSquare, Send,
+  CheckCircle2, MessageSquare, Send, ChevronLeft, ChevronRight, FileText,
 } from 'lucide-react';
 import { EventForm } from './EventForm';
 import { AttendeesList } from './AttendeesList';
@@ -45,6 +45,8 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
   const [stats, setStats]                   = useState<{ total: number; checkedIn: number }>({ total: 0, checkedIn: 0 });
   const [loading, setLoading]               = useState(true);
   const [showAllEvents, setShowAllEvents]   = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
 
   // Bulk SMS state
   const [showBulkSMS, setShowBulkSMS]         = useState(false);
@@ -81,8 +83,72 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
       setEvents(data);
       const active = data.filter(e => e.is_active);
       if (!selectedEvent) setSelectedEvent(active[0] ?? data[0] ?? null);
+      loadEventCounts(data);
     }
     setLoading(false);
+  };
+
+  const loadEventCounts = async (eventList: Event[]) => {
+    if (eventList.length === 0) return;
+    const { data } = await supabase
+      .from('attendees')
+      .select('event_id')
+      .in('event_id', eventList.map(e => e.id));
+    if (data) {
+      const counts: Record<string, number> = {};
+      data.forEach((a: { event_id: string }) => {
+        counts[a.event_id] = (counts[a.event_id] || 0) + 1;
+      });
+      setEventCounts(counts);
+    }
+  };
+
+  const toggleEventActive = async (event: Event, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await supabase.from('events').update({ is_active: !event.is_active }).eq('id', event.id);
+    loadEvents();
+  };
+
+  const exportPDF = async () => {
+    if (!selectedEvent) return;
+    const { data, error } = await supabase.from('attendees').select('*').eq('event_id', selectedEvent.id);
+    if (!error && data) {
+      const customFields = (selectedEvent.custom_fields || []).filter((f: any) =>
+        f.active !== false && !['first_name','last_name','email','phone','gender','organization'].includes(f.id)
+      );
+      const headers = ['Name','Email','Phone','Organization','Ticket','Status',...customFields.map((f: any) => f.label)];
+      const rows = data.map((a: Attendee) => ({
+        name: `${a.salutation || ''} ${a.first_name} ${a.last_name}`.trim(),
+        email: a.email, phone: a.phone || '-', org: a.organization || '-',
+        ticket: a.ticket_type || '-',
+        status: a.checked_in ? 'Checked In' : 'Pending',
+        custom: customFields.map((f: any) => (a as any).form_data?.[f.id] || '-'),
+      }));
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return;
+      printWindow.document.write(`<!DOCTYPE html><html><head><title>${selectedEvent.name} — Attendees</title><style>
+        body{font-family:sans-serif;padding:24px;color:#1e293b}
+        h1{font-size:18px;font-weight:700;margin:0 0 4px}
+        .meta{color:#64748b;font-size:12px;margin-bottom:20px}
+        table{width:100%;border-collapse:collapse;font-size:11px}
+        th{background:#f1f5f9;padding:8px;border:1px solid #e2e8f0;font-weight:600;text-align:left}
+        td{padding:6px 8px;border:1px solid #e2e8f0}
+        tr:nth-child(even) td{background:#f8fafc}
+        .green{color:#16a34a;font-weight:600}.grey{color:#94a3b8}
+        @page{margin:1cm}
+      </style></head><body>
+      <h1>${selectedEvent.name}</h1>
+      <p class="meta">${data.length} attendees &middot; Exported ${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
+      <table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>
+      ${rows.map(r=>`<tr>
+        <td>${r.name}</td><td>${r.email}</td><td>${r.phone}</td><td>${r.org}</td><td>${r.ticket}</td>
+        <td class="${r.status==='Checked In'?'green':'grey'}">${r.status}</td>
+        ${r.custom.map((c: string)=>`<td>${c}</td>`).join('')}
+      </tr>`).join('')}
+      </tbody></table></body></html>`);
+      printWindow.document.close();
+      printWindow.onload = () => { printWindow.print(); };
+    }
   };
 
   const loadStats = async () => {
@@ -290,62 +356,104 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
 
         {/* Events tab */}
         {activeTab === 'events' && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
+          <div className="flex gap-6 h-full">
 
             {/* Events sidebar */}
-            <div className="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
-              <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-                  <Calendar size={20} className="text-blue-600" /> Events
-                </h2>
-                <button
-                  onClick={() => setShowAllEvents(!showAllEvents)}
-                  className={`p-2 rounded-lg transition-colors ${showAllEvents ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                  title={showAllEvents ? 'Show active only' : 'Show all events'}
-                >
-                  <Filter size={18} />
-                </button>
-              </div>
-              <div className="space-y-2 overflow-y-auto flex-1">
-                {displayedEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    className={`w-full p-3 rounded-lg transition-all ${selectedEvent?.id === event.id ? 'bg-blue-50 border-2 border-blue-600' : 'bg-slate-50 border-2 border-transparent hover:border-slate-300'}`}
+            <div className={`transition-all duration-300 flex-shrink-0 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden ${sidebarCollapsed ? 'w-12' : 'w-64'}`}>
+              {sidebarCollapsed ? (
+                <div className="flex flex-col items-center gap-2 py-3">
+                  <button
+                    onClick={() => setSidebarCollapsed(false)}
+                    className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+                    title="Expand sidebar"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <button onClick={() => setSelectedEvent(event)} className="flex-1 text-left">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="font-medium text-slate-900 text-sm">{event.name}</span>
-                          <span className={`px-1.5 py-0.5 text-xs font-semibold rounded-full ${event.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'}`}>
-                            {event.is_active ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
-                        <div className="text-xs text-slate-500">{new Date(event.event_date).toLocaleDateString()}</div>
-                        <div className="text-xs text-slate-400 mt-0.5">{event.location}</div>
+                    <ChevronRight size={18} />
+                  </button>
+                  {displayedEvents.map(event => (
+                    <button
+                      key={event.id}
+                      onClick={() => setSelectedEvent(event)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-all flex-shrink-0 ${selectedEvent?.id === event.id ? 'ring-2 ring-blue-600 ring-offset-1' : ''} ${event.is_active ? 'bg-green-500' : 'bg-slate-400'}`}
+                      title={event.name}
+                    >
+                      {event.name.charAt(0).toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between px-4 pt-4 pb-3 flex-shrink-0">
+                    <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                      <Calendar size={18} className="text-blue-600" /> Events
+                    </h2>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setShowAllEvents(!showAllEvents)}
+                        className={`p-1.5 rounded-lg transition-colors ${showAllEvents ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        title={showAllEvents ? 'Show active only' : 'Show all events'}
+                      >
+                        <Filter size={15} />
                       </button>
-                      <div className="flex gap-1 flex-shrink-0">
-                        <button onClick={(e) => { e.stopPropagation(); setEventToEdit(event); setShowEventForm(true); }}
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors" title="Edit">
-                          <Edit2 size={13} />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); setEventToDelete(event); }}
-                          className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => setSidebarCollapsed(true)}
+                        className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+                        title="Collapse sidebar"
+                      >
+                        <ChevronLeft size={15} />
+                      </button>
                     </div>
                   </div>
-                ))}
-                {displayedEvents.length === 0 && (
-                  <div className="text-center text-slate-500 text-sm py-8">
-                    {showAllEvents ? 'No events yet.' : 'No active events. Toggle filter to see all.'}
+                  <div className="space-y-2 overflow-y-auto flex-1 px-3 pb-3">
+                    {displayedEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        className={`w-full p-3 rounded-lg transition-all ${selectedEvent?.id === event.id ? 'bg-blue-50 border-2 border-blue-600' : 'bg-slate-50 border-2 border-transparent hover:border-slate-300'}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <button onClick={() => setSelectedEvent(event)} className="flex-1 text-left min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                              <span className="font-medium text-slate-900 text-sm truncate">{event.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <button
+                                onClick={(e) => toggleEventActive(event, e)}
+                                className={`px-1.5 py-0.5 text-xs font-semibold rounded-full transition-colors hover:opacity-80 ${event.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'}`}
+                                title="Click to toggle active/inactive"
+                              >
+                                {event.is_active ? 'Active' : 'Inactive'}
+                              </button>
+                              {eventCounts[event.id] !== undefined && (
+                                <span className="text-xs text-slate-400">{eventCounts[event.id]} attendees</span>
+                              )}
+                            </div>
+                            <div className="text-xs text-slate-500">{new Date(event.event_date).toLocaleDateString()}</div>
+                            <div className="text-xs text-slate-400 mt-0.5 truncate">{event.location}</div>
+                          </button>
+                          <div className="flex gap-1 flex-shrink-0">
+                            <button onClick={(e) => { e.stopPropagation(); setEventToEdit(event); setShowEventForm(true); }}
+                              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors" title="Edit">
+                              <Edit2 size={13} />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); setEventToDelete(event); }}
+                              className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {displayedEvents.length === 0 && (
+                      <div className="text-center text-slate-500 text-sm py-8">
+                        {showAllEvents ? 'No events yet.' : 'No active events. Toggle filter to see all.'}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
 
             {/* Attendees panel */}
-            <div className="lg:col-span-3 flex flex-col min-h-0">
+            <div className="flex-1 flex flex-col min-h-0 min-w-0">
               {selectedEvent ? (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col flex-1 min-h-0">
                   <div className="flex items-center justify-between p-5 border-b border-slate-200 flex-shrink-0 flex-wrap gap-3">
@@ -379,7 +487,11 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
                       </button>
                       <button onClick={exportAttendees}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
-                        <Download size={13} /> Export
+                        <Download size={13} /> CSV
+                      </button>
+                      <button onClick={exportPDF}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
+                        <FileText size={13} /> PDF
                       </button>
                       <button onClick={() => onNavigateToCheckIn(selectedEvent.id)}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium">

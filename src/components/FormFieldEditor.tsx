@@ -178,12 +178,16 @@ export function FormFieldEditor({ eventId, currentFields, onClose, onSuccess }: 
                         </div>
                       </div>
 
-                      {field.placeholder && (
+                      {field.type !== 'select' && (
                         <div className="mb-3">
                           <label className="block text-xs font-medium text-slate-700 mb-1">Placeholder</label>
-                          <div className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm">
-                            {field.placeholder}
-                          </div>
+                          <input
+                            type="text"
+                            value={field.placeholder || ''}
+                            onChange={(e) => updateDefaultField(field.id, { placeholder: e.target.value })}
+                            className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter placeholder text..."
+                          />
                         </div>
                       )}
 
