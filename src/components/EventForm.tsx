@@ -39,10 +39,15 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
     e.preventDefault();
     setLoading(true);
 
+    const payload = {
+      ...formData,
+      primary_color: formData.primary_color || null,
+    };
+
     if (event) {
       const { error } = await supabase
         .from('events')
-        .update(formData)
+        .update(payload)
         .eq('id', event.id);
 
       setLoading(false);
@@ -52,7 +57,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
     } else {
       const { error } = await supabase
         .from('events')
-        .insert([{ ...formData, app_id: 'default_app' }]);
+        .insert([{ ...payload, app_id: 'default_app' }]);
 
       setLoading(false);
       if (!error) {
