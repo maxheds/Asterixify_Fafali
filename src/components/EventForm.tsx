@@ -20,6 +20,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
     primary_color: '',
   });
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (event) {
@@ -44,6 +45,8 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
       primary_color: formData.primary_color || null,
     };
 
+    setErrorMsg(null);
+
     if (event) {
       const { error } = await supabase
         .from('events')
@@ -52,8 +55,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
 
       setLoading(false);
       if (error) {
-        console.error('Update error:', JSON.stringify(error));
-        alert('Update failed: ' + error.message);
+        setErrorMsg(error.message);
       } else {
         onSuccess();
       }
@@ -64,8 +66,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
 
       setLoading(false);
       if (error) {
-        console.error('Insert error:', JSON.stringify(error));
-        alert('Create failed: ' + error.message);
+        setErrorMsg(error.message);
       } else {
         onSuccess();
       }
@@ -187,6 +188,13 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
               </div>
             </label>
           </div>
+
+          {errorMsg && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 flex items-start gap-3">
+              <span className="text-red-500 font-bold text-lg leading-none mt-0.5">!</span>
+              <p className="text-sm text-red-700">{errorMsg}</p>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-4">
             <button
