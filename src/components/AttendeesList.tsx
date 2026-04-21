@@ -76,7 +76,7 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
     }
   };
 
-  const DEFAULT_FIELD_IDS = ['first_name','last_name','email','phone','gender','organization'];
+  const DEFAULT_FIELD_IDS = ['first_name','last_name','email','phone','gender','organization','age_group'];
 
   const getActiveFields = () => {
     if (!event || !event.custom_fields) return [];
@@ -499,12 +499,11 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
                     {isFieldActive('phone') && (
                       <th className="text-left px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-50 max-w-[100px]">Phone</th>
                     )}
-                    {isFieldActive('gender') && (
-                      <th className="text-left px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-50 max-w-[70px]">Gender</th>
-                    )}
+                    <th className="text-left px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-50 max-w-[70px]">Gender</th>
                     {isFieldActive('organization') && (
                       <th className="text-left px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-50 max-w-[100px]">Organization</th>
                     )}
+                    <th className="text-left px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-50 max-w-[80px]">Age Group</th>
                     {getActiveCustomFields().map((field: any) => (
                       <th key={field.id} className="text-left px-2 py-2 text-xs font-semibold text-slate-700 bg-slate-50 max-w-[120px]">{field.label}</th>
                     ))}
@@ -529,14 +528,13 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
                       {isFieldActive('phone') && (
                         <td className="px-2 py-2 text-slate-600 text-sm max-w-[100px] truncate" title={attendee.phone || '-'}>{attendee.phone || '-'}</td>
                       )}
-                      {isFieldActive('gender') && (
-                        <td className="px-2 py-2 text-slate-600 text-sm max-w-[70px] truncate">{attendee.gender || '-'}</td>
-                      )}
+                      <td className="px-2 py-2 text-slate-600 text-sm max-w-[70px] truncate">{attendee.gender || '-'}</td>
                       {isFieldActive('organization') && (
                         <td className="px-2 py-2 text-slate-600 text-sm max-w-[100px] truncate" title={attendee.organization || '-'}>
                           {attendee.organization || '-'}
                         </td>
                       )}
+                      <td className="px-2 py-2 text-slate-600 text-sm max-w-[80px] truncate">{attendee.age_group || '-'}</td>
                       {getActiveCustomFields().map((field: any) => (
                         <td key={field.id} className="px-2 py-2 text-slate-600 text-sm max-w-[120px] truncate" title={(attendee as any).form_data?.[field.id] || '-'}>
                           {(attendee as any).form_data?.[field.id] || '-'}

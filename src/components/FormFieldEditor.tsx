@@ -27,6 +27,7 @@ const DEFAULT_FIELDS: FormField[] = [
   { id: 'phone', label: 'Phone', type: 'tel', required: true, active: true, placeholder: '+1234567890', isDefault: true },
   { id: 'gender', label: 'Gender', type: 'select', required: true, active: true, options: ['Male', 'Female', 'Other', 'Prefer not to say'], isDefault: true },
   { id: 'organization', label: 'Company/Organization', type: 'text', required: true, active: true, placeholder: 'ABC Corporation', isDefault: true },
+  { id: 'age_group', label: 'Age Group', type: 'select', required: false, active: true, options: ['Under 18', '18-25', '26-35', '36-45', '46-55', '56-65', '65+'], isDefault: true },
 ];
 
 export function FormFieldEditor({ eventId, currentFields, onClose, onSuccess }: FormFieldEditorProps) {

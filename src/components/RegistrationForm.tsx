@@ -25,6 +25,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     phone: '',
     gender: '',
     organization: '',
+    age_group: '',
   });
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>({});
   const [error, setError] = useState<string>('');
@@ -214,6 +215,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     if (isFieldActive('phone') && isFieldRequired('phone') && !formData.phone) return false;
     if (isFieldActive('gender') && isFieldRequired('gender') && !formData.gender) return false;
     if (isFieldActive('organization') && isFieldRequired('organization') && !formData.organization) return false;
+    if (isFieldActive('age_group') && isFieldRequired('age_group') && !formData.age_group) return false;
     return true;
   };
 
@@ -251,6 +253,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
       phone: '',
       gender: '',
       organization: '',
+      age_group: '',
     });
     setCustomFieldValues({});
     setCurrentStep(1);
@@ -539,6 +542,29 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                     />
                   </div>
                 )}
+
+                {isFieldActive('age_group') && (
+                  <div>
+                    <label className="block text-xs font-semibold text-lime-200 mb-1">
+                      Age Group {isFieldRequired('age_group') && <span className="text-red-400">*</span>}
+                    </label>
+                    <select
+                      required={isFieldRequired('age_group')}
+                      value={formData.age_group}
+                      onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
+                      className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
+                    >
+                      <option value="">Select age group</option>
+                      <option value="Under 18">Under 18</option>
+                      <option value="18-25">18-25</option>
+                      <option value="26-35">26-35</option>
+                      <option value="36-45">36-45</option>
+                      <option value="46-55">46-55</option>
+                      <option value="56-65">56-65</option>
+                      <option value="65+">65+</option>
+                    </select>
+                  </div>
+                )}
               </>
             )}
 
@@ -600,6 +626,13 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                     <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Company/Organization</p>
                     <p className="text-xs text-white font-medium">{formData.organization}</p>
                   </div>
+
+                  {formData.age_group && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Age Group</p>
+                      <p className="text-xs text-white font-medium">{formData.age_group}</p>
+                    </div>
+                  )}
 
                   {customFields.length > 0 && Object.keys(customFieldValues).length > 0 && (
                     <>

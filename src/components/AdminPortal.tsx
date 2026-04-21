@@ -116,10 +116,12 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
       const customFields = (selectedEvent.custom_fields || []).filter((f: any) =>
         f.active !== false && !['first_name','last_name','email','phone','gender','organization'].includes(f.id)
       );
-      const headers = ['Name','Email','Phone','Organization','Ticket','Status',...customFields.map((f: any) => f.label)];
+      const headers = ['Name','Gender','Email','Phone','Organization','Age Group','Ticket','Status',...customFields.map((f: any) => f.label)];
       const rows = data.map((a: Attendee) => ({
         name: `${a.salutation || ''} ${a.first_name} ${a.last_name}`.trim(),
+        gender: a.gender || '-',
         email: a.email, phone: a.phone || '-', org: a.organization || '-',
+        age_group: a.age_group || '-',
         ticket: a.ticket_type || '-',
         status: a.checked_in ? 'Checked In' : 'Pending',
         custom: customFields.map((f: any) => (a as any).form_data?.[f.id] || '-'),
@@ -141,7 +143,7 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
       <p class="meta">${data.length} attendees &middot; Exported ${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
       <table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>
       ${rows.map(r=>`<tr>
-        <td>${r.name}</td><td>${r.email}</td><td>${r.phone}</td><td>${r.org}</td><td>${r.ticket}</td>
+        <td>${r.name}</td><td>${r.gender}</td><td>${r.email}</td><td>${r.phone}</td><td>${r.org}</td><td>${r.age_group}</td><td>${r.ticket}</td>
         <td class="${r.status==='Checked In'?'green':'grey'}">${r.status}</td>
         ${r.custom.map((c: string)=>`<td>${c}</td>`).join('')}
       </tr>`).join('')}
@@ -174,16 +176,21 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
     if (!selectedEvent) return;
     const { data, error } = await supabase.from('attendees').select('*').eq('event_id', selectedEvent.id);
     if (!error && data) {
+      const customFieldDefs = (selectedEvent.custom_fields || []).filter((f: any) =>
+        f.active !== false && !['first_name','last_name','email','phone','gender','organization','age_group'].includes(f.id)
+      );
+      const quote = (val: any) => `"${String(val ?? '').replace(/"/g, '""')}"`;
       const csv = [
-        ['First Name','Last Name','Email','Phone','Organization','Age Group','Ticket Type','Special Requirements','Checked In','Checked In At','Checked In By','Registration Source'],
+        ['Salutation','First Name','Last Name','Email','Phone','Gender','Organization','Age Group','Ticket Type','Special Requirements','Checked In','Checked In At','Checked In By','Registration Source',...customFieldDefs.map((f: any) => f.label)],
         ...data.map((a: Attendee) => [
-          a.first_name, a.last_name, a.email, a.phone,
-          a.organization || '', a.age_group || '', a.ticket_type,
+          a.salutation || '', a.first_name, a.last_name, a.email, a.phone || '',
+          a.gender || '', a.organization || '', a.age_group || '', a.ticket_type || '',
           a.special_requirements || '',
           a.checked_in ? 'Yes' : 'No',
           a.checked_in_at || '', a.checked_in_by || '', a.registration_source || '',
+          ...customFieldDefs.map((f: any) => (a as any).form_data?.[f.id] || ''),
         ]),
-      ].map(row => row.join(',')).join('\n');
+      ].map(row => row.map(quote).join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv' });
       const url  = window.URL.createObjectURL(blob);
       const a    = document.createElement('a');
