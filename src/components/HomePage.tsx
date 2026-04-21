@@ -16,6 +16,7 @@ interface Event {
   location: string;
   flyer_url?: string;
   primary_color?: string | null;
+  secondary_color?: string | null;
 }
 
 export function HomePage({ onRegister, onCheckIn }: HomePageProps) {
@@ -44,6 +45,7 @@ export function HomePage({ onRegister, onCheckIn }: HomePageProps) {
     'https://res.cloudinary.com/dtosbfggh/image/upload/v1776783416/Dr_Kofi_zrmp1e.jpg';
 
   const primaryColor = activeEvent?.primary_color || null;
+  const secondaryColor = activeEvent?.secondary_color || null;
 
   const registerButtonStyle = primaryColor
     ? { backgroundColor: primaryColor, borderColor: primaryColor }
@@ -52,10 +54,10 @@ export function HomePage({ onRegister, onCheckIn }: HomePageProps) {
     ? 'group relative w-full backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 border-2'
     : 'group relative w-full bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 border-2 border-white/30 hover:bg-white/20';
 
-  const checkInButtonStyle = primaryColor
-    ? { backgroundColor: primaryColor, borderColor: primaryColor, filter: 'brightness(0.85)' }
+  const checkInButtonStyle = secondaryColor
+    ? { backgroundColor: secondaryColor, borderColor: secondaryColor }
     : {};
-  const checkInButtonClass = primaryColor
+  const checkInButtonClass = secondaryColor
     ? 'group relative w-full backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 border-2'
     : 'group relative w-full bg-black/20 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 border-2 border-white/20 hover:bg-black/30';
 
