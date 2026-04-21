@@ -12,6 +12,7 @@ export interface Database {
           event_flyer: string;
           is_active: boolean;
           custom_fields: any;
+          primary_color: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -25,6 +26,7 @@ export interface Database {
           event_flyer?: string;
           is_active?: boolean;
           custom_fields?: any;
+          primary_color?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -38,6 +40,7 @@ export interface Database {
           event_flyer?: string;
           is_active?: boolean;
           custom_fields?: any;
+          primary_color?: string | null;
           created_at?: string;
           updated_at?: string;
         };

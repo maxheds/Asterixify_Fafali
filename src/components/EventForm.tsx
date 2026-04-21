@@ -17,6 +17,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
     location: '',
     event_flyer: '',
     is_active: true,
+    primary_color: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -29,6 +30,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
         location: event.location || '',
         event_flyer: event.event_flyer || '',
         is_active: event.is_active,
+        primary_color: event.primary_color || '',
       });
     }
   }, [event]);
@@ -125,6 +127,35 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
               placeholder="https://example.com/flyer.jpg or use Pexels link"
             />
             <p className="text-xs text-slate-500 mt-1">Add a link to your event flyer or promotional image</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Button Colour</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={formData.primary_color || '#000000'}
+                onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                className="w-12 h-10 rounded-lg border border-slate-300 cursor-pointer p-1"
+              />
+              <input
+                type="text"
+                value={formData.primary_color}
+                onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent font-mono text-sm"
+                placeholder="#000000 (leave blank for frosted glass)"
+              />
+              {formData.primary_color && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, primary_color: '' })}
+                  className="text-xs text-slate-500 hover:text-red-500 transition-colors whitespace-nowrap"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Pick a colour for the homepage buttons. Leave blank to use the default frosted glass style.</p>
           </div>
 
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
