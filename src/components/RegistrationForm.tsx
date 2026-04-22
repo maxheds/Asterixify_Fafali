@@ -30,6 +30,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>({});
   const [error, setError] = useState<string>('');
   const [countdown, setCountdown] = useState(5);
+  const [loadingEvents, setLoadingEvents] = useState(true);
 
   useEffect(() => {
     loadEvents();
@@ -55,6 +56,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
       setEvents(data);
       setSelectedEventId(data[0].id);
     }
+    setLoadingEvents(false);
   };
 
   const handleSubmit = async () => {
@@ -322,24 +324,29 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     <div className="h-full flex flex-col bg-transparent py-3 px-4">
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto pb-3">
-          {selectedEvent && (
-            <div className="flex items-center justify-center gap-4 text-sm mb-3">
-              <div className="flex items-center gap-2 text-lime-300">
-                <Calendar size={16} className="text-lime-400" />
-                <span>{new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric'
-                })}</span>
+          <div className="flex items-center justify-center gap-4 text-sm mb-3 min-h-[24px]">
+            {loadingEvents ? (
+              <div className="flex items-center gap-3">
+                <div className="h-3 w-24 bg-lime-400/20 rounded-full animate-pulse" />
+                <div className="h-3 w-32 bg-lime-400/20 rounded-full animate-pulse" />
               </div>
-              {selectedEvent.location && (
+            ) : selectedEvent ? (
+              <>
                 <div className="flex items-center gap-2 text-lime-300">
-                  <MapPin size={16} className="text-lime-400" />
-                  <span>{selectedEvent.location}</span>
+                  <Calendar size={16} className="text-lime-400" />
+                  <span>{new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                  })}</span>
                 </div>
-              )}
-            </div>
-          )}
+                {selectedEvent.location && (
+                  <div className="flex items-center gap-2 text-lime-300">
+                    <MapPin size={16} className="text-lime-400" />
+                    <span>{selectedEvent.location}</span>
+                  </div>
+                )}
+              </>
+            ) : null}
+          </div>
 
           {error && (
             <div className="bg-red-900/80 backdrop-blur-sm border border-red-500/50 rounded-xl p-3 mb-3 flex items-start gap-2">
@@ -392,7 +399,10 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
           </div>
 
             <form className="space-y-3">
-            {events.length > 1 && currentStep === 1 && (
+            {loadingEvents && currentStep === 1 && (
+              <div className="h-9 bg-slate-700/40 rounded-lg animate-pulse" />
+            )}
+            {!loadingEvents && events.length > 1 && currentStep === 1 && (
               <div>
                 <label className="block text-xs font-semibold text-lime-200 mb-1">
                   Select Event <span className="text-red-400">*</span>
@@ -568,7 +578,14 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
               </>
             )}
 
-              {currentStep === 3 && customFields.length > 0 && (
+              {currentStep === 3 && loadingEvents && (
+                <div className="space-y-3">
+                  <div className="h-4 w-40 bg-slate-700/40 rounded animate-pulse" />
+                  <div className="h-9 bg-slate-700/40 rounded-lg animate-pulse" />
+                  <div className="h-9 bg-slate-700/40 rounded-lg animate-pulse" />
+                </div>
+              )}
+              {currentStep === 3 && !loadingEvents && customFields.length > 0 && (
                 <>
                   <h3 className="text-lg sm:text-xl font-bold text-lime-300 mb-3">Additional Information</h3>
 
