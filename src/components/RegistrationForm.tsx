@@ -502,7 +502,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
-                      placeholder="+233 123 456 7890"
+                      placeholder="0244000000"
                     />
                   </div>
                 )}

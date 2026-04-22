@@ -24,7 +24,7 @@ const DEFAULT_FIELDS: FormField[] = [
   { id: 'first_name', label: 'First Name', type: 'text', required: true, active: true, placeholder: 'John', isDefault: true },
   { id: 'last_name', label: 'Last Name', type: 'text', required: true, active: true, placeholder: 'Doe', isDefault: true },
   { id: 'email', label: 'Email', type: 'email', required: true, active: true, placeholder: 'john@example.com', isDefault: true },
-  { id: 'phone', label: 'Phone', type: 'tel', required: true, active: true, placeholder: '+1234567890', isDefault: true },
+  { id: 'phone', label: 'Phone', type: 'tel', required: true, active: true, placeholder: '0244000000', isDefault: true },
   { id: 'gender', label: 'Gender', type: 'select', required: true, active: true, options: ['Male', 'Female', 'Other', 'Prefer not to say'], isDefault: true },
   { id: 'organization', label: 'Company/Organization', type: 'text', required: true, active: true, placeholder: 'ABC Corporation', isDefault: true },
   { id: 'age_group', label: 'Age Group', type: 'select', required: false, active: true, options: ['Under 18', '18-25', '26-35', '36-45', '46-55', '56-65', '65+'], isDefault: true },
