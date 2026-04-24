@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { hashPassword, verifyPassword } from '../lib/auth';
-import { sendBulkSMS } from '../lib/smsService';
 import { Event, Attendee } from '../lib/database.types';
 import {
   Plus, Calendar, Download, Upload, Settings, Edit2, BarChart3,
   Filter, Trash2, Users, KeyRound, Eye, EyeOff, AlertCircle,
-  CheckCircle2, MessageSquare, Send, ChevronLeft, ChevronRight, FileText,
+  CheckCircle2, Smartphone, ChevronLeft, ChevronRight, FileText,
 } from 'lucide-react';
 import { EventForm } from './EventForm';
 import { AttendeesList } from './AttendeesList';
@@ -15,6 +14,7 @@ import { FormFieldEditor } from './FormFieldEditor';
 import { ReportingDashboard } from './ReportingDashboard';
 import { UserManagement } from './UserManagement';
 import { NotificationSettings } from './NotificationSettings';
+import { SmsManager } from './SmsManager';
 
 interface AdminPortalProps {
   onNavigateToCheckIn: (eventId: string) => void;
@@ -23,7 +23,7 @@ interface AdminPortalProps {
   adminRole: 'master' | 'admin';
 }
 
-type ActiveTab = 'events' | 'settings' | 'users';
+type ActiveTab = 'events' | 'settings' | 'sms' | 'users';
 
 interface ChangePasswordForm {
   currentPassword: string;
@@ -48,14 +48,6 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
   const [exportFilter, setExportFilter] = useState<'all' | 'checked_in' | 'pending'>('all');
-
-  // Bulk SMS state
-  const [showBulkSMS, setShowBulkSMS]         = useState(false);
-  const [bulkMessage, setBulkMessage]         = useState('');
-  const [bulkPhones, setBulkPhones]           = useState<string[]>([]);
-  const [bulkSending, setBulkSending]         = useState(false);
-  const [bulkProgress, setBulkProgress]       = useState(0);
-  const [bulkResult, setBulkResult]           = useState<{ sent: number; failed: number } | null>(null);
 
   // Change-password state
   const [cpForm, setCpForm]           = useState<ChangePasswordForm>({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -202,29 +194,6 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
     }
   };
 
-  // ── Bulk SMS ──────────────────────────────────────────────────────────────
-  const openBulkSMS = async () => {
-    if (!selectedEvent) return;
-    const { data } = await supabase.from('attendees').select('phone').eq('event_id', selectedEvent.id);
-    const phones = (data ?? []).map((a: { phone: string }) => a.phone).filter(Boolean);
-    setBulkPhones(phones);
-    setBulkMessage('');
-    setBulkResult(null);
-    setBulkProgress(0);
-    setShowBulkSMS(true);
-  };
-
-  const handleBulkSend = async () => {
-    if (!bulkMessage.trim() || bulkPhones.length === 0) return;
-    setBulkSending(true);
-    setBulkProgress(0);
-    const result = await sendBulkSMS(bulkPhones, bulkMessage, (done, total) => {
-      setBulkProgress(Math.round((done / total) * 100));
-    });
-    setBulkResult(result);
-    setBulkSending(false);
-  };
-
   // ── Change password ───────────────────────────────────────────────────────
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -312,6 +281,12 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
               >
                 <Settings size={14} /> Settings
               </button>
+              <button
+                onClick={() => setActiveTab('sms')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'sms' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                <Smartphone size={14} /> SMS
+              </button>
               {adminRole === 'master' && (
                 <button
                   onClick={() => setActiveTab('users')}
@@ -355,6 +330,13 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
         {activeTab === 'settings' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full overflow-y-auto">
             <NotificationSettings />
+          </div>
+        )}
+
+        {/* SMS tab */}
+        {activeTab === 'sms' && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full overflow-y-auto">
+            <SmsManager />
           </div>
         )}
 
@@ -488,10 +470,6 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors text-xs font-medium">
                         <BarChart3 size={13} /> Reports
                       </button>
-                      <button onClick={openBulkSMS}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-medium">
-                        <MessageSquare size={13} /> Bulk SMS
-                      </button>
                       <button onClick={() => setShowImport(true)}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
                         <Upload size={13} /> Import
@@ -576,92 +554,6 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
                 <button onClick={() => setEventToDelete(null)} className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors">Cancel</button>
                 <button onClick={() => handleDeleteEvent(eventToDelete)} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Delete Event</button>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Bulk SMS modal */}
-        {showBulkSMS && selectedEvent && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="bg-green-100 p-2 rounded-lg"><MessageSquare size={20} className="text-green-600" /></div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">Bulk SMS</h3>
-                  <p className="text-sm text-slate-500">{selectedEvent.name}</p>
-                </div>
-              </div>
-
-              {bulkResult ? (
-                <div className="text-center py-6">
-                  <CheckCircle2 size={48} className="text-green-500 mx-auto mb-3" />
-                  <p className="text-lg font-bold text-slate-900 mb-1">SMS Sent!</p>
-                  <p className="text-slate-600 text-sm">
-                    {bulkResult.sent} sent successfully
-                    {bulkResult.failed > 0 && `, ${bulkResult.failed} failed`}
-                  </p>
-                  <button onClick={() => setShowBulkSMS(false)} className="mt-5 px-5 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium">Close</button>
-                </div>
-              ) : (
-                <>
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-4 flex items-center gap-2">
-                    <MessageSquare size={15} className="text-green-600 flex-shrink-0" />
-                    <span className="text-sm text-slate-700">
-                      <strong>{bulkPhones.length}</strong> attendee{bulkPhones.length !== 1 ? 's' : ''} with phone numbers will receive this message
-                    </span>
-                  </div>
-
-                  {bulkPhones.length === 0 ? (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-700 text-sm mb-4">
-                      No attendees have phone numbers for this event.
-                    </div>
-                  ) : (
-                    <>
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">Message</label>
-                        <textarea
-                          value={bulkMessage}
-                          onChange={e => setBulkMessage(e.target.value)}
-                          rows={4}
-                          placeholder="Type your message here..."
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                        />
-                        <div className="flex justify-end mt-1">
-                          <span className={`text-xs ${bulkMessage.length > 160 ? 'text-red-500 font-semibold' : 'text-slate-400'}`}>
-                            {bulkMessage.length} / 160
-                          </span>
-                        </div>
-                      </div>
-
-                      {bulkSending && (
-                        <div className="mb-4">
-                          <div className="flex justify-between text-xs text-slate-500 mb-1">
-                            <span>Sending…</span><span>{bulkProgress}%</span>
-                          </div>
-                          <div className="w-full bg-slate-200 rounded-full h-2">
-                            <div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{ width: `${bulkProgress}%` }} />
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  <div className="flex gap-3">
-                    <button onClick={() => setShowBulkSMS(false)} disabled={bulkSending}
-                      className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm disabled:opacity-50">
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleBulkSend}
-                      disabled={bulkSending || !bulkMessage.trim() || bulkPhones.length === 0}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
-                    >
-                      <Send size={14} />
-                      {bulkSending ? 'Sending…' : `Send to ${bulkPhones.length}`}
-                    </button>
-                  </div>
-                </>
-              )}
             </div>
           </div>
         )}

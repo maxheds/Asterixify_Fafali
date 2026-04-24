@@ -15,6 +15,7 @@ export interface Database {
           primary_color: string | null;
           secondary_color: string | null;
           max_attendees: number | null;
+          programme_link: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -31,6 +32,7 @@ export interface Database {
           primary_color?: string | null;
           secondary_color?: string | null;
           max_attendees?: number | null;
+          programme_link?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -47,6 +49,7 @@ export interface Database {
           primary_color?: string | null;
           secondary_color?: string | null;
           max_attendees?: number | null;
+          programme_link?: string | null;
           created_at?: string;
           updated_at?: string;
         };

@@ -73,7 +73,12 @@ export async function isSmsEnabled(): Promise<boolean> {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function applyTemplate(template: string, vars: Record<string, string>): string {
-  return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? '');
+  let result = template;
+  // If programme_link is empty, cleanly remove it and any surrounding whitespace
+  if (!vars['programme_link']) {
+    result = result.replace(/\s*\{programme_link\}/g, '');
+  }
+  return result.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? '').replace(/  +/g, ' ').trim();
 }
 
 /**
@@ -118,16 +123,18 @@ export async function sendRegistrationSMS(data: {
   event_name: string;
   event_date: string;
   event_location: string;
+  programme_link?: string;
 }): Promise<boolean> {
   if (!data.phone?.trim()) return false;
   const settings = await getNotificationSettings();
   if (!settings.sms_enabled) return false;
 
   const message = applyTemplate(settings.sms_registration_template, {
-    name:       data.first_name,
-    event_name: data.event_name,
-    date:       data.event_date,
-    location:   data.event_location || 'TBA',
+    name:             data.first_name,
+    event_name:       data.event_name,
+    date:             data.event_date,
+    location:         data.event_location || 'TBA',
+    programme_link:   data.programme_link || '',
   });
   return sendRawSMS([data.phone], message);
 }

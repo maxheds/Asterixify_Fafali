@@ -413,6 +413,7 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
         event_name: event.name,
         event_date: eventDate,
         event_location: event.location || 'TBA',
+        programme_link: event.programme_link || '',
       }));
     }
     await Promise.all(tasks);

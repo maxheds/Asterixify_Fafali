@@ -159,6 +159,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
             event_name: selectedEvent.name,
             event_date: eventDate,
             event_location: selectedEvent.location || 'TBA',
+            programme_link: selectedEvent.programme_link || '',
           }),
         ]);
       }
