@@ -76,7 +76,7 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
     }
   };
 
-  const DEFAULT_FIELD_IDS = ['first_name','last_name','email','phone','gender','organization','age_group'];
+  const DEFAULT_FIELD_IDS = ['first_name','last_name','email','phone','gender','organization','age_group','ticket_type'];
 
   const getActiveFields = () => {
     if (!event || !event.custom_fields) return [];
@@ -430,6 +430,7 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
         gender: attendee.gender,
         organization: attendee.organization,
         ticket_type: attendee.ticket_type,
+        notes: attendee.notes,
       })
       .eq('id', attendee.id);
 
@@ -751,6 +752,16 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
                   type="text"
                   value={editingAttendee.ticket_type || ''}
                   onChange={(e) => setEditingAttendee({ ...editingAttendee, ticket_type: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Admin Notes</label>
+                <textarea
+                  value={editingAttendee.notes || ''}
+                  onChange={(e) => setEditingAttendee({ ...editingAttendee, notes: e.target.value })}
+                  rows={3}
+                  placeholder="Internal notes about this attendee (not visible to attendee)..."
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                 />
               </div>

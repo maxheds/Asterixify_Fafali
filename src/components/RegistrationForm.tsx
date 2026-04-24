@@ -26,6 +26,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     gender: '',
     organization: '',
     age_group: '',
+    ticket_type: 'Attendee',
   });
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>({});
   const [error, setError] = useState<string>('');
@@ -63,7 +64,20 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     setLoading(true);
     setError('');
 
-    // Duplicate attendee check — same email in the same event
+    // Capacity check
+    if (selectedEvent?.max_attendees) {
+      const { count } = await supabase
+        .from('attendees')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', selectedEventId);
+      if (count !== null && count >= selectedEvent.max_attendees) {
+        setError('This event has reached its maximum capacity. Registration is now closed.');
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Duplicate email check
     const { data: existing } = await supabase
       .from('attendees')
       .select('id')
@@ -75,6 +89,22 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
       setError('This email address is already registered for this event. Please check your inbox for your confirmation email.');
       setLoading(false);
       return;
+    }
+
+    // Duplicate phone check
+    if (formData.phone.trim()) {
+      const { data: existingPhone } = await supabase
+        .from('attendees')
+        .select('id')
+        .eq('event_id', selectedEventId)
+        .eq('phone', formData.phone.trim())
+        .maybeSingle();
+
+      if (existingPhone) {
+        setError('This phone number is already registered for this event.');
+        setLoading(false);
+        return;
+      }
     }
 
     const { data, error } = await supabase
@@ -113,6 +143,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
         await Promise.all([
           emailOn
             ? sendRegistrationEmail({
+                attendee_id: data.id,
                 salutation: data.salutation,
                 first_name: data.first_name,
                 last_name: data.last_name,
@@ -191,7 +222,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
   const allFormFields = selectedEvent?.custom_fields || [];
   const activeFields = allFormFields.filter((f: any) => f.active !== false);
   const customFields = activeFields.filter((f: any) =>
-    !['first_name', 'last_name', 'email', 'phone', 'gender', 'organization'].includes(f.id)
+    !['first_name', 'last_name', 'email', 'phone', 'gender', 'organization', 'age_group', 'ticket_type'].includes(f.id)
   );
 
   const isFieldActive = (fieldId: string) => {
@@ -218,6 +249,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     if (isFieldActive('gender') && isFieldRequired('gender') && !formData.gender) return false;
     if (isFieldActive('organization') && isFieldRequired('organization') && !formData.organization) return false;
     if (isFieldActive('age_group') && isFieldRequired('age_group') && !formData.age_group) return false;
+    if (isFieldActive('ticket_type') && isFieldRequired('ticket_type') && !formData.ticket_type) return false;
     return true;
   };
 
@@ -256,6 +288,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
       gender: '',
       organization: '',
       age_group: '',
+      ticket_type: 'Attendee',
     });
     setCustomFieldValues({});
     setCurrentStep(1);
@@ -575,6 +608,25 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                     </select>
                   </div>
                 )}
+
+                {isFieldActive('ticket_type') && (
+                  <div>
+                    <label className="block text-xs font-semibold text-lime-200 mb-1">
+                      Ticket Type {isFieldRequired('ticket_type') && <span className="text-red-400">*</span>}
+                    </label>
+                    <select
+                      required={isFieldRequired('ticket_type')}
+                      value={formData.ticket_type}
+                      onChange={(e) => setFormData({ ...formData, ticket_type: e.target.value })}
+                      className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white"
+                    >
+                      <option value="">Select ticket type</option>
+                      {(allFormFields.find((f: any) => f.id === 'ticket_type')?.options || ['Attendee', 'Event Organiser', 'Media', 'Waiter', 'Security']).map((opt: string) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </>
             )}
 
@@ -648,6 +700,13 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                     <div>
                       <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Age Group</p>
                       <p className="text-xs text-white font-medium">{formData.age_group}</p>
+                    </div>
+                  )}
+
+                  {formData.ticket_type && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Ticket Type</p>
+                      <p className="text-xs text-white font-medium">{formData.ticket_type}</p>
                     </div>
                   )}
 

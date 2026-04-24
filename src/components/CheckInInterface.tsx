@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Event, Attendee } from '../lib/database.types';
-import { Search, CheckCircle2, ArrowLeft, Home, User } from 'lucide-react';
+import { Search, CheckCircle2, User, QrCode, FlipHorizontal, X, UserPlus } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
 import { sendCheckInEmail } from '../lib/emailService';
 import { sendCheckInSMS, isEmailEnabled } from '../lib/smsService';
 
@@ -20,6 +21,10 @@ export function CheckInInterface({ eventId, onBack, onHome, onRegister }: CheckI
   const [loading, setLoading] = useState(false);
   const [checkInStep, setCheckInStep] = useState<'search' | 'confirm' | 'success'>('search');
   const [checkInSuccess, setCheckInSuccess] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState<'environment' | 'user'>('environment');
+  const [qrScanError, setQrScanError] = useState('');
+  const qrRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
     loadEvent();
@@ -36,6 +41,78 @@ export function CheckInInterface({ eventId, onBack, onHome, onRegister }: CheckI
       setEvent(data);
     }
   };
+
+  const stopScanner = async () => {
+    if (qrRef.current) {
+      try { await qrRef.current.stop(); } catch {}
+      try { qrRef.current.clear(); } catch {}
+      qrRef.current = null;
+    }
+  };
+
+  const startScanner = async (facing: 'environment' | 'user') => {
+    await stopScanner();
+    const scanner = new Html5Qrcode('qr-reader');
+    qrRef.current = scanner;
+    setQrScanError('');
+    try {
+      await scanner.start(
+        { facingMode: facing },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        async (decodedText) => {
+          await stopScanner();
+          setShowQRScanner(false);
+          await handleQRScan(decodedText);
+        },
+        () => {}
+      );
+    } catch {
+      setQrScanError('Could not access camera. Please allow camera access or use manual search.');
+    }
+  };
+
+  const handleQRScan = async (attendeeId: string) => {
+    setLoading(true);
+    const { data } = await supabase
+      .from('attendees')
+      .select('*')
+      .eq('id', attendeeId)
+      .eq('event_id', eventId)
+      .maybeSingle();
+    setLoading(false);
+    if (data) {
+      handleSelectAttendee(data as Attendee);
+    } else {
+      setQrScanError('QR code not found for this event. Please use manual search.');
+    }
+  };
+
+  const openQRScanner = () => {
+    setQrScanError('');
+    setShowQRScanner(true);
+  };
+
+  const closeQRScanner = async () => {
+    await stopScanner();
+    setShowQRScanner(false);
+  };
+
+  const flipCamera = async () => {
+    const newFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+    setCameraFacing(newFacing);
+    await startScanner(newFacing);
+  };
+
+  useEffect(() => {
+    if (showQRScanner) {
+      const timer = setTimeout(() => startScanner(cameraFacing), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [showQRScanner]);
+
+  useEffect(() => {
+    return () => { stopScanner(); };
+  }, []);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -300,27 +377,61 @@ export function CheckInInterface({ eventId, onBack, onHome, onRegister }: CheckI
               </p>
             </div>
 
-            <div className="mb-4">
-              <div className="relative mb-3">
-                <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" />
-                <input
-                  type="text"
-                  placeholder="Enter your name, email, or phone..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full pl-10 pr-3 py-3 text-base bg-slate-700/80 border border-purple-500/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-white placeholder-slate-400"
-                  autoFocus
-                />
+            {showQRScanner ? (
+              <div className="mb-4">
+                <div className="bg-slate-900 rounded-xl overflow-hidden border border-purple-500/30">
+                  <div id="qr-reader" style={{ width: '100%' }} />
+                  {qrScanError && (
+                    <p className="px-4 py-2 text-red-300 text-sm text-center">{qrScanError}</p>
+                  )}
+                  <div className="flex gap-2 p-3">
+                    <button
+                      onClick={flipCamera}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-700 text-purple-200 rounded-lg text-sm hover:bg-slate-600 transition-colors"
+                    >
+                      <FlipHorizontal size={16} /> Flip Camera
+                    </button>
+                    <button
+                      onClick={closeQRScanner}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-700/70 text-white rounded-lg text-sm hover:bg-red-700 transition-colors"
+                    >
+                      <X size={16} /> Close Scanner
+                    </button>
+                  </div>
+                </div>
               </div>
-              <button
-                onClick={handleSearch}
-                disabled={!searchQuery.trim() || loading}
-                className="w-full px-4 py-3 text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold disabled:opacity-50 shadow-lg shadow-purple-600/20"
-              >
-                {loading ? 'Searching...' : 'Search'}
-              </button>
-            </div>
+            ) : (
+              <div className="mb-4">
+                <div className="relative mb-3">
+                  <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" />
+                  <input
+                    type="text"
+                    placeholder="Enter your name, email, or phone..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    className="w-full pl-10 pr-3 py-3 text-base bg-slate-700/80 border border-purple-500/30 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-white placeholder-slate-400"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSearch}
+                    disabled={!searchQuery.trim() || loading}
+                    className="flex-1 px-4 py-3 text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold disabled:opacity-50 shadow-lg shadow-purple-600/20"
+                  >
+                    {loading ? 'Searching...' : 'Search'}
+                  </button>
+                  <button
+                    onClick={openQRScanner}
+                    className="px-4 py-3 bg-slate-700/80 border border-purple-500/30 text-purple-300 rounded-lg hover:bg-slate-600 transition-colors"
+                    title="Scan QR Code"
+                  >
+                    <QrCode size={22} />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {searchResults.length > 0 && (
               <div className="space-y-2 max-h-[40vh] overflow-y-auto">
@@ -371,8 +482,19 @@ export function CheckInInterface({ eventId, onBack, onHome, onRegister }: CheckI
               </div>
             )}
 
+            {onRegister && (
+              <div className="mt-3">
+                <button
+                  onClick={onRegister}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-base bg-lime-600/80 border border-lime-500/40 text-white rounded-lg hover:bg-lime-600 transition-colors font-semibold"
+                >
+                  <UserPlus size={18} /> Walk-in Registration
+                </button>
+              </div>
+            )}
+
             {onHome && (
-              <div className="mt-4 text-center">
+              <div className="mt-3 text-center">
                 <button
                   onClick={onHome}
                   className="text-purple-300 hover:text-purple-200 font-medium text-sm"

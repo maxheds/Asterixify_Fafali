@@ -14,6 +14,7 @@ export interface Database {
           custom_fields: any;
           primary_color: string | null;
           secondary_color: string | null;
+          max_attendees: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -29,6 +30,7 @@ export interface Database {
           custom_fields?: any;
           primary_color?: string | null;
           secondary_color?: string | null;
+          max_attendees?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -44,6 +46,7 @@ export interface Database {
           custom_fields?: any;
           primary_color?: string | null;
           secondary_color?: string | null;
+          max_attendees?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -155,6 +158,7 @@ export interface Database {
           special_requirements: string;
           registration_source: string;
           form_data: any;
+          notes: string | null;
           checked_in: boolean;
           checked_in_at: string | null;
           checked_in_by: string;
@@ -177,6 +181,7 @@ export interface Database {
           special_requirements?: string;
           registration_source?: string;
           form_data?: any;
+          notes?: string | null;
           checked_in?: boolean;
           checked_in_at?: string | null;
           checked_in_by?: string;
@@ -199,6 +204,7 @@ export interface Database {
           special_requirements?: string;
           registration_source?: string;
           form_data?: any;
+          notes?: string | null;
           checked_in?: boolean;
           checked_in_at?: string | null;
           checked_in_by?: string;

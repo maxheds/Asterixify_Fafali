@@ -1,6 +1,7 @@
 import emailjs from '@emailjs/browser';
 
 export interface RegistrationEmailData {
+  attendee_id: string;
   salutation: string;
   first_name: string;
   last_name: string;
@@ -32,6 +33,7 @@ export const sendRegistrationEmail = async (data: RegistrationEmailData): Promis
 
   try {
     const templateParams = {
+      attendee_id: data.attendee_id,
       salutation: data.salutation,
       first_name: data.first_name,
       last_name: data.last_name,
@@ -39,6 +41,7 @@ export const sendRegistrationEmail = async (data: RegistrationEmailData): Promis
       event_name: data.event_name,
       event_date: data.event_date,
       event_location: data.event_location,
+      qr_url: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.attendee_id)}&size=200x200`,
     };
 
     await emailjs.send(

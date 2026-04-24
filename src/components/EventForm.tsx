@@ -19,6 +19,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
     is_active: true,
     primary_color: '',
     secondary_color: '',
+    max_attendees: '',
   });
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -33,7 +34,8 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
         event_flyer: event.event_flyer || '',
         is_active: event.is_active,
         primary_color: event.primary_color || '',
-        secondary_color: (event as any).secondary_color || '',
+        secondary_color: event.secondary_color || '',
+        max_attendees: event.max_attendees?.toString() || '',
       });
     }
   }, [event]);
@@ -46,6 +48,7 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
       ...formData,
       primary_color: formData.primary_color || null,
       secondary_color: formData.secondary_color || null,
+      max_attendees: formData.max_attendees ? parseInt(formData.max_attendees, 10) : null,
     };
 
     setErrorMsg(null);
@@ -142,6 +145,19 @@ export function EventForm({ event, onClose, onSuccess }: EventFormProps) {
               placeholder="https://example.com/flyer.jpg or use Pexels link"
             />
             <p className="text-xs text-slate-500 mt-1">Add a link to your event flyer or promotional image</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Maximum Attendees</label>
+            <input
+              type="number"
+              min="1"
+              value={formData.max_attendees}
+              onChange={(e) => setFormData({ ...formData, max_attendees: e.target.value })}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              placeholder="Leave blank for unlimited"
+            />
+            <p className="text-xs text-slate-500 mt-1">Set a cap on registrations. Leave blank for no limit.</p>
           </div>
 
           <div>
