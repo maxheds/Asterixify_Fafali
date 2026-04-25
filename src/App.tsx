@@ -7,6 +7,8 @@ import { CheckInEventSelector } from './components/CheckInEventSelector';
 import { HomePage } from './components/HomePage';
 import { Modal } from './components/Modal';
 import { AdminPage } from './components/AdminPage';
+import { TicketPage } from './components/TicketPage';
+import { FeedbackForm } from './components/FeedbackForm';
 import { supabase } from './lib/supabase';
 
 type ModalMode = 'none' | 'register' | 'checkin';
@@ -121,6 +123,8 @@ function App() {
           </>
         } />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/ticket/:attendeeId" element={<TicketPage />} />
+        <Route path="/feedback/:attendeeId" element={<FeedbackForm />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

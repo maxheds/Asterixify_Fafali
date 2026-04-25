@@ -6,6 +6,7 @@ import {
   Plus, Calendar, Download, Upload, Settings, Edit2, BarChart3,
   Filter, Trash2, Users, KeyRound, Eye, EyeOff, AlertCircle,
   CheckCircle2, Smartphone, ChevronLeft, ChevronRight, FileText, Maximize2,
+  LayoutDashboard, Copy, MessageCircle,
 } from 'lucide-react';
 import { EventForm } from './EventForm';
 import { AttendeesList } from './AttendeesList';
@@ -15,6 +16,8 @@ import { ReportingDashboard } from './ReportingDashboard';
 import { UserManagement } from './UserManagement';
 import { NotificationSettings } from './NotificationSettings';
 import { SmsManager } from './SmsManager';
+import { LiveDashboard } from './LiveDashboard';
+import { FeedbackManager } from './FeedbackManager';
 
 interface AdminPortalProps {
   onNavigateToCheckIn: (eventId: string) => void;
@@ -23,7 +26,8 @@ interface AdminPortalProps {
   adminRole: 'master' | 'admin';
 }
 
-type ActiveTab = 'events' | 'settings' | 'sms' | 'users';
+type ActiveTab = 'events' | 'settings' | 'sms' | 'users' | 'feedback';
+type EventView = 'attendees' | 'dashboard';
 
 interface ChangePasswordForm {
   currentPassword: string;
@@ -48,6 +52,7 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
   const [exportFilter, setExportFilter] = useState<'all' | 'checked_in' | 'pending'>('all');
+  const [eventView, setEventView] = useState<EventView>('attendees');
 
   // Change-password state
   const [cpForm, setCpForm]           = useState<ChangePasswordForm>({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -227,6 +232,13 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
     onLogout?.();
   };
 
+  const cloneEvent = async (event: Event, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const { id: _id, created_at: _ca, updated_at: _ua, ...rest } = event;
+    await supabase.from('events').insert([{ ...rest, name: `${event.name} (Copy)`, is_active: false, app_id: 'default_app' }]);
+    loadEvents();
+  };
+
   const checkInRate = stats.total > 0 ? Math.round((stats.checkedIn / stats.total) * 100) : 0;
 
   if (loading) {
@@ -296,6 +308,12 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
               >
                 <Smartphone size={14} /> SMS
               </button>
+              <button
+                onClick={() => setActiveTab('feedback')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'feedback' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                <MessageCircle size={14} /> Feedback
+              </button>
               {adminRole === 'master' && (
                 <button
                   onClick={() => setActiveTab('users')}
@@ -354,6 +372,13 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
         {activeTab === 'sms' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full overflow-y-auto">
             <SmsManager />
+          </div>
+        )}
+
+        {/* Feedback tab */}
+        {activeTab === 'feedback' && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full overflow-y-auto">
+            <FeedbackManager />
           </div>
         )}
 
@@ -444,6 +469,10 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
                               className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors" title="Edit">
                               <Edit2 size={13} />
                             </button>
+                            <button onClick={(e) => cloneEvent(event, e)}
+                              className="p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Duplicate event">
+                              <Copy size={13} />
+                            </button>
                             <button onClick={(e) => { e.stopPropagation(); setEventToDelete(event); }}
                               className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
                               <Trash2 size={13} />
@@ -467,13 +496,29 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
               {selectedEvent ? (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col flex-1 min-h-0">
                   <div className="flex items-center justify-between p-5 border-b border-slate-200 flex-shrink-0 flex-wrap gap-3">
-                    <div>
-                      <h2 className="text-base font-semibold text-slate-900">Attendees — {selectedEvent.name}</h2>
-                      {selectedEvent.custom_fields?.length > 0 && (
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          Custom: {selectedEvent.custom_fields.map((f: { label: string }) => f.label).join(', ')}
-                        </p>
-                      )}
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <h2 className="text-base font-semibold text-slate-900">{selectedEvent.name}</h2>
+                        {eventView === 'attendees' && selectedEvent.custom_fields?.length > 0 && (
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Custom: {selectedEvent.custom_fields.map((f: { label: string }) => f.label).join(', ')}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex bg-slate-100 border border-slate-200 rounded-lg overflow-hidden">
+                        <button
+                          onClick={() => setEventView('attendees')}
+                          className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors ${eventView === 'attendees' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
+                        >
+                          <Users size={12} /> Attendees
+                        </button>
+                        <button
+                          onClick={() => setEventView('dashboard')}
+                          className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors ${eventView === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
+                        >
+                          <LayoutDashboard size={12} /> Dashboard
+                        </button>
+                      </div>
                     </div>
                     <div className="flex gap-2 flex-wrap justify-end">
                       <button onClick={() => setShowFormEditor(true)}
@@ -516,8 +561,11 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
                       </button>
                     </div>
                   </div>
-                  <div className="flex-1 p-5 min-h-0">
-                    <AttendeesList eventId={selectedEvent.id} />
+                  <div className="flex-1 p-5 min-h-0 overflow-y-auto">
+                    {eventView === 'dashboard'
+                      ? <LiveDashboard eventId={selectedEvent.id} eventName={selectedEvent.name} />
+                      : <AttendeesList eventId={selectedEvent.id} />
+                    }
                   </div>
                 </div>
               ) : (

@@ -31,6 +31,13 @@ export function SmsManager() {
   // ── Programme links ───────────────────────────────────────────────────────
   const [events,          setEvents]          = useState<Event[]>([]);
   const [programmeLinks,  setProgrammeLinks]  = useState<Record<string, string>>({});
+
+  // ── Pre-event reminders ───────────────────────────────────────────────────
+  const [reminderEventId,   setReminderEventId]   = useState('');
+  const [reminderPhones,    setReminderPhones]    = useState<{ phone: string; first_name: string }[]>([]);
+  const [reminderSending,   setReminderSending]   = useState(false);
+  const [reminderProgress,  setReminderProgress]  = useState(0);
+  const [reminderResult,    setReminderResult]    = useState<{ sent: number; failed: number } | null>(null);
   const [savingLinks,     setSavingLinks]     = useState(false);
   const [linksFeedback,   setLinksFeedback]   = useState('');
 
@@ -51,6 +58,10 @@ export function SmsManager() {
     if (blastEventId) loadBlastPhones();
   }, [blastEventId, blastFilter]);
 
+  useEffect(() => {
+    if (reminderEventId) loadReminderAttendees();
+  }, [reminderEventId]);
+
   const loadAll = async () => {
     setLoading(true);
     const [settings, eventsRes] = await Promise.all([
@@ -67,7 +78,10 @@ export function SmsManager() {
       const links: Record<string, string> = {};
       eventsRes.data.forEach((e: Event) => { links[e.id] = e.programme_link || ''; });
       setProgrammeLinks(links);
-      if (eventsRes.data.length > 0) setBlastEventId(eventsRes.data[0].id);
+      if (eventsRes.data.length > 0) {
+        setBlastEventId(eventsRes.data[0].id);
+        setReminderEventId(eventsRes.data[0].id);
+      }
     }
     setLoading(false);
   };
@@ -113,6 +127,44 @@ export function SmsManager() {
     setLinksFeedback('Programme links saved.');
     setTimeout(() => setLinksFeedback(''), 3000);
     setSavingLinks(false);
+  };
+
+  const loadReminderAttendees = async () => {
+    if (!reminderEventId) return;
+    const { data } = await supabase
+      .from('attendees')
+      .select('phone, first_name')
+      .eq('event_id', reminderEventId)
+      .eq('checked_in', false);
+    setReminderPhones((data ?? []).filter((a: { phone: string }) => a.phone) as { phone: string; first_name: string }[]);
+  };
+
+  const handleSendReminders = async () => {
+    if (reminderPhones.length === 0 || !reminderEventId) return;
+    const event = events.find(e => e.id === reminderEventId);
+    if (!event) return;
+    setReminderSending(true);
+    setReminderProgress(0);
+
+    const eventDate = new Date(event.event_date).toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+    let sent = 0; let failed = 0;
+    for (let i = 0; i < reminderPhones.length; i++) {
+      const att = reminderPhones[i];
+      const msg = regTemplate
+        .replace(/\{name\}/g, att.first_name)
+        .replace(/\{event_name\}/g, event.name)
+        .replace(/\{date\}/g, eventDate)
+        .replace(/\{location\}/g, event.location || 'TBA')
+        .replace(/\s*\{programme_link\}/g, event.programme_link ? ` ${event.programme_link}` : '')
+        .replace(/  +/g, ' ').trim();
+      const result = await sendBulkSMS([att.phone], `REMINDER: ${msg}`, () => {});
+      if (result.sent > 0) sent++; else failed++;
+      setReminderProgress(Math.round(((i + 1) / reminderPhones.length) * 100));
+    }
+    setReminderResult({ sent, failed });
+    setReminderSending(false);
   };
 
   const handleBlastSend = async () => {
@@ -259,6 +311,78 @@ export function SmsManager() {
         >
           {savingSettings ? 'Saving...' : 'Save Templates'}
         </button>
+      </div>
+
+      {/* ── Pre-event Reminders ─────────────────────────────────────────────── */}
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Pre-event Reminders</h4>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Send a reminder to all pending (not yet checked-in) attendees with phone numbers. Uses the Registration SMS template prefixed with "REMINDER:".
+          </p>
+        </div>
+
+        {reminderResult ? (
+          <div className="text-center py-8 bg-slate-50 border border-slate-200 rounded-xl">
+            <CheckCircle2 size={40} className="text-green-500 mx-auto mb-3" />
+            <p className="text-base font-bold text-slate-900 mb-1">Reminders Sent!</p>
+            <p className="text-slate-600 text-sm">
+              {reminderResult.sent} sent successfully{reminderResult.failed > 0 && `, ${reminderResult.failed} failed`}
+            </p>
+            <button
+              onClick={() => { setReminderResult(null); setReminderProgress(0); }}
+              className="mt-4 px-5 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium"
+            >
+              Send Again
+            </button>
+          </div>
+        ) : (
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Event</label>
+              <select
+                value={reminderEventId}
+                onChange={e => setReminderEventId(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-4 py-3">
+              <Smartphone size={15} className="text-amber-600 flex-shrink-0" />
+              <span className="text-sm text-slate-700">
+                <strong>{reminderPhones.length}</strong> pending attendee{reminderPhones.length !== 1 ? 's' : ''} will receive a reminder
+              </span>
+            </div>
+
+            {reminderPhones.length === 0 && reminderEventId && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-700 text-sm">
+                No pending attendees with phone numbers for this event.
+              </div>
+            )}
+
+            {reminderSending && (
+              <div>
+                <div className="flex justify-between text-xs text-slate-500 mb-1">
+                  <span>Sending reminders…</span><span>{reminderProgress}%</span>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-2">
+                  <div className="bg-amber-500 h-2 rounded-full transition-all duration-300" style={{ width: `${reminderProgress}%` }} />
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={handleSendReminders}
+              disabled={reminderSending || reminderPhones.length === 0}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-semibold disabled:opacity-50"
+            >
+              <Send size={15} />
+              {reminderSending ? 'Sending…' : `Send Reminders to ${reminderPhones.length} attendee${reminderPhones.length !== 1 ? 's' : ''}`}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Programme Links ──────────────────────────────────────────────────── */}

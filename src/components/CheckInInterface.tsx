@@ -24,11 +24,26 @@ export function CheckInInterface({ eventId, onBack, onHome, onRegister }: CheckI
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [cameraFacing, setCameraFacing] = useState<'environment' | 'user'>('environment');
   const [qrScanError, setQrScanError] = useState('');
+  const [ticketTypeFilter, setTicketTypeFilter] = useState('');
+  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
   const qrRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
     loadEvent();
+    loadTicketTypes();
   }, [eventId]);
+
+  const loadTicketTypes = async () => {
+    const { data } = await supabase
+      .from('attendees')
+      .select('ticket_type')
+      .eq('event_id', eventId);
+    if (data) {
+      const types = [...new Set(data.map((a: { ticket_type: string }) => a.ticket_type).filter(Boolean))].sort();
+      const hasUnassigned = data.some((a: { ticket_type: string }) => !a.ticket_type);
+      setAvailableTypes([...types, ...(hasUnassigned ? ['Unassigned'] : [])]);
+    }
+  };
 
   const loadEvent = async () => {
     const { data, error } = await supabase
@@ -433,10 +448,36 @@ export function CheckInInterface({ eventId, onBack, onHome, onRegister }: CheckI
               </div>
             )}
 
+            {availableTypes.length > 1 && !showQRScanner && (
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setTicketTypeFilter('')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${ticketTypeFilter === '' ? 'bg-purple-600 text-white' : 'bg-slate-700/60 text-purple-300 border border-purple-500/30 hover:bg-slate-600'}`}
+                >
+                  All
+                </button>
+                {availableTypes.map(type => (
+                  <button
+                    key={type}
+                    onClick={() => setTicketTypeFilter(type === ticketTypeFilter ? '' : type)}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${ticketTypeFilter === type ? 'bg-purple-600 text-white' : 'bg-slate-700/60 text-purple-300 border border-purple-500/30 hover:bg-slate-600'}`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {searchResults.length > 0 && (
               <div className="space-y-2 max-h-[40vh] overflow-y-auto">
                 <h3 className="text-base font-semibold text-purple-300 mb-2">Select Your Name:</h3>
-                {searchResults.map((attendee) => (
+                {searchResults.filter(a =>
+                  ticketTypeFilter === ''
+                    ? true
+                    : ticketTypeFilter === 'Unassigned'
+                    ? !a.ticket_type
+                    : a.ticket_type === ticketTypeFilter
+                ).map((attendee) => (
                   <button
                     key={attendee.id}
                     onClick={() => handleSelectAttendee(attendee)}

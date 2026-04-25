@@ -32,6 +32,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
   const [error, setError] = useState<string>('');
   const [countdown, setCountdown] = useState(5);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [autoFilled, setAutoFilled] = useState(false);
 
   useEffect(() => {
     loadEvents();
@@ -45,6 +46,30 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
       return () => clearInterval(timer);
     }
   }, [submitted, countdown]);
+
+  const handlePhoneBlur = async () => {
+    if (formData.phone.trim().length < 7) return;
+    if (formData.first_name || formData.last_name || formData.email) return;
+    const { data } = await supabase
+      .from('attendees')
+      .select('first_name, last_name, email, organization, salutation')
+      .eq('phone', formData.phone.trim())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data) {
+      setFormData(prev => ({
+        ...prev,
+        first_name: data.first_name || prev.first_name,
+        last_name: data.last_name || prev.last_name,
+        email: data.email || prev.email,
+        organization: data.organization || prev.organization,
+        salutation: data.salutation || prev.salutation,
+      }));
+      setAutoFilled(true);
+      setTimeout(() => setAutoFilled(false), 6000);
+    }
+  };
 
   const loadEvents = async () => {
     const { data, error } = await supabase
@@ -295,6 +320,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     setCurrentStep(1);
     setCountdown(5);
     setError('');
+    setAutoFilled(false);
   };
 
   if (submitted && registeredAttendee && selectedEvent) {
@@ -544,10 +570,16 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                       type="tel"
                       required={isFieldRequired('phone')}
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(e) => { setFormData({ ...formData, phone: e.target.value }); setAutoFilled(false); }}
+                      onBlur={handlePhoneBlur}
                       className="w-full px-3 py-2 text-sm bg-slate-700/80 border border-lime-500/30 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 text-white placeholder-slate-400"
                       placeholder="0244000000"
                     />
+                    {autoFilled && (
+                      <p className="mt-1 text-xs text-lime-300 font-medium">
+                        Details auto-filled from a previous registration. Please check they are correct.
+                      </p>
+                    )}
                   </div>
                 )}
 

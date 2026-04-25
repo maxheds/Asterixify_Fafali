@@ -16,6 +16,9 @@ export interface Database {
           secondary_color: string | null;
           max_attendees: number | null;
           programme_link: string | null;
+          feedback_enabled: boolean;
+          feedback_hours_after: number;
+          reminder_enabled: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -33,6 +36,9 @@ export interface Database {
           secondary_color?: string | null;
           max_attendees?: number | null;
           programme_link?: string | null;
+          feedback_enabled?: boolean;
+          feedback_hours_after?: number;
+          reminder_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -50,6 +56,9 @@ export interface Database {
           secondary_color?: string | null;
           max_attendees?: number | null;
           programme_link?: string | null;
+          feedback_enabled?: boolean;
+          feedback_hours_after?: number;
+          reminder_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -252,3 +261,24 @@ export type Event = Database['public']['Tables']['events']['Row'];
 export type Attendee = Database['public']['Tables']['attendees']['Row'];
 export type CheckInHistory = Database['public']['Tables']['check_in_history']['Row'];
 export type AdminUser = Database['public']['Tables']['admin_users']['Row'];
+
+export interface FeedbackQuestion {
+  id: string;
+  app_id: string;
+  question_text: string;
+  answer_type: 'rating' | 'yesno' | 'text';
+  sort_order: number;
+  is_preset: boolean;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface FeedbackResponse {
+  id: string;
+  app_id: string;
+  event_id: string;
+  attendee_id: string | null;
+  question_id: string;
+  answer_text: string;
+  created_at: string;
+}
