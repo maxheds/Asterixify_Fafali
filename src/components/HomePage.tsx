@@ -14,7 +14,7 @@ interface Event {
   description: string;
   event_date: string;
   location: string;
-  flyer_url?: string;
+  event_flyer?: string;
   primary_color?: string | null;
   secondary_color?: string | null;
 }
@@ -41,7 +41,7 @@ export function HomePage({ onRegister, onCheckIn }: HomePageProps) {
     }
   };
 
-  const backgroundImage = activeEvent?.flyer_url ||
+  const backgroundImage = activeEvent?.event_flyer ||
     'https://res.cloudinary.com/dtosbfggh/image/upload/v1776783416/Dr_Kofi_zrmp1e.jpg';
 
   const primaryColor = activeEvent?.primary_color || null;
