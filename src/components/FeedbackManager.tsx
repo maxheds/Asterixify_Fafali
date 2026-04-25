@@ -91,8 +91,7 @@ export function FeedbackManager() {
     const { data: attendees } = await supabase
       .from('attendees')
       .select('id, phone, first_name')
-      .eq('event_id', sendEventId)
-      .eq('checked_in', true);
+      .eq('event_id', sendEventId);
 
     const withPhones = (attendees || []).filter((a: { phone: string }) => a.phone);
     if (withPhones.length === 0) {

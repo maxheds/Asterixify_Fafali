@@ -253,104 +253,80 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100">
 
       {/* ── Header ───────────────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-shrink-0 print:hidden w-full">
-        <div className="flex items-center gap-4">
+      <div className="bg-white border-b border-slate-200 shadow-sm flex-shrink-0 print:hidden">
+        <div className="px-4 sm:px-6 lg:px-8 flex items-center gap-3 h-16">
 
-          {/* Title */}
-          <div className="flex-shrink-0">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Asterixify Event System</h1>
-            <p className="text-slate-500 mt-0.5 text-xs">
-              Signed in as <span className="font-semibold text-slate-700">{adminUsername}</span>
-              <span className={`ml-2 px-1.5 py-0.5 text-xs font-semibold rounded-full ${adminRole === 'master' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}`}>
+          {/* Left: title + user */}
+          <div className="flex-shrink-0 min-w-0 w-44 lg:w-56">
+            <h1 className="text-sm font-bold text-slate-900 tracking-tight truncate">Asterixify Event System</h1>
+            <p className="text-xs text-slate-500 truncate">
+              {adminUsername}
+              <span className={`ml-1.5 px-1.5 py-0.5 text-xs font-semibold rounded-full ${adminRole === 'master' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}`}>
                 {adminRole}
               </span>
             </p>
           </div>
 
-          {/* Check-in progress bar */}
-          {selectedEvent && activeTab === 'events' && (
-            <div className="flex-1 max-w-xs bg-white rounded-xl shadow-sm border border-slate-200 px-5 py-3">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-medium text-slate-500">Check-in Progress</span>
-                <span className="text-sm font-bold text-slate-900">{checkInRate}%</span>
-              </div>
-              <div className="w-full bg-slate-200 rounded-full h-2 mb-1.5">
-                <div
-                  className="bg-green-500 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${checkInRate}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-xs text-slate-400">
-                <span>{stats.checkedIn} checked in</span>
-                <span>{stats.total} total</span>
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-            {/* Tabs */}
-            <div className="flex bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
-              <button
-                onClick={() => setActiveTab('events')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'events' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <Calendar size={14} /> Events
-              </button>
-              <button
-                onClick={() => setActiveTab('settings')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'settings' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <Settings size={14} /> Settings
-              </button>
-              <button
-                onClick={() => setActiveTab('sms')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'sms' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <Smartphone size={14} /> SMS
-              </button>
-              <button
-                onClick={() => setActiveTab('feedback')}
-                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'feedback' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <MessageCircle size={14} /> Feedback
-              </button>
-              {adminRole === 'master' && (
+          {/* Centre: tabs */}
+          <div className="flex-1 flex justify-center">
+            <div className="flex bg-slate-100 rounded-xl p-1 gap-0.5">
+              {([
+                { key: 'events',   icon: <Calendar size={13} />,       label: 'Events'   },
+                { key: 'settings', icon: <Settings size={13} />,       label: 'Settings' },
+                { key: 'sms',      icon: <Smartphone size={13} />,     label: 'SMS'      },
+                { key: 'feedback', icon: <MessageCircle size={13} />,  label: 'Feedback' },
+                ...(adminRole === 'master' ? [{ key: 'users', icon: <Users size={13} />, label: 'Users' }] : []),
+              ] as { key: ActiveTab; icon: React.ReactNode; label: string }[]).map(tab => (
                 <button
-                  onClick={() => setActiveTab('users')}
-                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'users' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${activeTab === tab.key ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                 >
-                  <Users size={14} /> Users
+                  {tab.icon} {tab.label}
                 </button>
-              )}
+              ))}
             </div>
+          </div>
+
+          {/* Right: check-in progress + actions */}
+          <div className="flex-shrink-0 flex items-center gap-2">
+            {selectedEvent && activeTab === 'events' && (
+              <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
+                <div className="w-20 bg-slate-200 rounded-full h-1.5">
+                  <div className="bg-green-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${checkInRate}%` }} />
+                </div>
+                <span className="text-xs font-bold text-slate-700">{checkInRate}%</span>
+                <span className="text-xs text-slate-400">{stats.checkedIn}/{stats.total}</span>
+              </div>
+            )}
 
             {activeTab === 'events' && (
               <button
                 onClick={() => setShowEventForm(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm font-medium"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-semibold"
               >
-                <Plus size={15} /> New Event
+                <Plus size={14} /> New Event
               </button>
             )}
 
             <button
               onClick={() => { setShowChangePassword(true); setCpError(''); setCpSuccess(''); }}
-              className="p-2 text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-lg transition-all"
+              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all"
               title="Change password"
             >
-              <KeyRound size={17} />
+              <KeyRound size={16} />
             </button>
 
             <button
               onClick={handleLaunchKiosk}
-              className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-colors text-sm font-medium"
-              title="Log out and launch fullscreen kiosk mode"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-colors text-xs font-semibold"
+              title="Launch fullscreen kiosk mode"
             >
-              <Maximize2 size={15} /> Kiosk Mode
+              <Maximize2 size={14} /> Kiosk
             </button>
 
             {onLogout && (
-              <button onClick={onLogout} className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium">
+              <button onClick={onLogout} className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-semibold">
                 Logout
               </button>
             )}
@@ -359,7 +335,7 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
       </div>
 
       {/* ── Main content ─────────────────────────────────────────────────── */}
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 pb-8 flex-1 min-h-0 w-full print:hidden">
+      <div className="px-4 sm:px-6 lg:px-8 pb-6 pt-4 flex-1 min-h-0 w-full print:hidden">
 
         {/* Settings tab */}
         {activeTab === 'settings' && (
@@ -495,47 +471,63 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
             <div className="flex-1 flex flex-col min-h-0 min-w-0">
               {selectedEvent ? (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col flex-1 min-h-0">
-                  <div className="flex items-center justify-between p-5 border-b border-slate-200 flex-shrink-0 flex-wrap gap-3">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <h2 className="text-base font-semibold text-slate-900">{selectedEvent.name}</h2>
-                        {eventView === 'attendees' && selectedEvent.custom_fields?.length > 0 && (
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            Custom: {selectedEvent.custom_fields.map((f: { label: string }) => f.label).join(', ')}
-                          </p>
-                        )}
+                  {/* Panel header — two rows */}
+                  <div className="px-5 pt-4 pb-3 border-b border-slate-200 flex-shrink-0 space-y-3">
+
+                    {/* Row 1: event name + view toggle + check-in button */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="min-w-0">
+                          <h2 className="text-sm font-semibold text-slate-900 truncate">{selectedEvent.name}</h2>
+                          {eventView === 'attendees' && selectedEvent.custom_fields?.length > 0 && (
+                            <p className="text-xs text-slate-400 truncate mt-0.5">
+                              {selectedEvent.custom_fields.map((f: { label: string }) => f.label).join(' · ')}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex bg-slate-100 border border-slate-200 rounded-lg overflow-hidden flex-shrink-0">
+                          <button
+                            onClick={() => setEventView('attendees')}
+                            className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors ${eventView === 'attendees' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
+                          >
+                            <Users size={12} /> Attendees
+                          </button>
+                          <button
+                            onClick={() => setEventView('dashboard')}
+                            className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors ${eventView === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
+                          >
+                            <LayoutDashboard size={12} /> Dashboard
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex bg-slate-100 border border-slate-200 rounded-lg overflow-hidden">
-                        <button
-                          onClick={() => setEventView('attendees')}
-                          className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors ${eventView === 'attendees' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
-                        >
-                          <Users size={12} /> Attendees
-                        </button>
-                        <button
-                          onClick={() => setEventView('dashboard')}
-                          className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors ${eventView === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
-                        >
-                          <LayoutDashboard size={12} /> Dashboard
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => onNavigateToCheckIn(selectedEvent.id)}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-semibold flex-shrink-0 shadow-sm"
+                      >
+                        Check-In Mode
+                      </button>
                     </div>
-                    <div className="flex gap-2 flex-wrap justify-end">
+
+                    {/* Row 2: secondary actions */}
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button onClick={() => setShowFormEditor(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
-                        <Settings size={13} /> Form Fields
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
+                        <Settings size={12} /> Form Fields
                         {selectedEvent.custom_fields?.length > 0 && (
-                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">{selectedEvent.custom_fields.length}</span>
+                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">{selectedEvent.custom_fields.length}</span>
                         )}
                       </button>
                       <button onClick={() => setShowReports(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors text-xs font-medium">
-                        <BarChart3 size={13} /> Reports
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-50 text-violet-700 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors text-xs font-medium">
+                        <BarChart3 size={12} /> Reports
                       </button>
                       <button onClick={() => setShowImport(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
-                        <Upload size={13} /> Import
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
+                        <Upload size={12} /> Import
                       </button>
+
+                      <div className="flex-1" />
+
                       <div className="flex items-center bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
                         {(['all', 'checked_in', 'pending'] as const).map((f) => (
                           <button
@@ -543,21 +535,17 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
                             onClick={() => setExportFilter(f)}
                             className={`px-2.5 py-1.5 text-xs font-medium transition-colors ${exportFilter === f ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
                           >
-                            {f === 'all' ? 'All' : f === 'checked_in' ? 'In' : 'Pending'}
+                            {f === 'all' ? 'All' : f === 'checked_in' ? 'Checked In' : 'Pending'}
                           </button>
                         ))}
                       </div>
                       <button onClick={exportAttendees}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
-                        <Download size={13} /> CSV
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
+                        <Download size={12} /> CSV
                       </button>
                       <button onClick={exportPDF}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
-                        <FileText size={13} /> PDF
-                      </button>
-                      <button onClick={() => onNavigateToCheckIn(selectedEvent.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium">
-                        Check-In Mode
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
+                        <FileText size={12} /> PDF
                       </button>
                     </div>
                   </div>
