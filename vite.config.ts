@@ -65,7 +65,7 @@ export default defineConfig({
               cacheName: 'cloudinary-image-cache',
               expiration: {
                 maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 24 * 30,
+                maxAgeSeconds: 60 * 60 * 24,
               },
               cacheableResponse: {
                 statuses: [0, 200],

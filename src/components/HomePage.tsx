@@ -41,8 +41,7 @@ export function HomePage({ onRegister, onCheckIn }: HomePageProps) {
     }
   };
 
-  const backgroundImage = activeEvent?.event_flyer ||
-    'https://res.cloudinary.com/dtosbfggh/image/upload/v1776783416/Dr_Kofi_zrmp1e.jpg';
+  const backgroundImage = activeEvent?.event_flyer || '';
 
   const primaryColor = activeEvent?.primary_color || null;
   const secondaryColor = activeEvent?.secondary_color || null;
