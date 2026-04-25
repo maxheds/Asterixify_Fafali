@@ -5,7 +5,7 @@ import { Event, Attendee } from '../lib/database.types';
 import {
   Plus, Calendar, Download, Upload, Settings, Edit2, BarChart3,
   Filter, Trash2, Users, KeyRound, Eye, EyeOff, AlertCircle,
-  CheckCircle2, Smartphone, ChevronLeft, ChevronRight, FileText,
+  CheckCircle2, Smartphone, ChevronLeft, ChevronRight, FileText, Maximize2,
 } from 'lucide-react';
 import { EventForm } from './EventForm';
 import { AttendeesList } from './AttendeesList';
@@ -218,6 +218,15 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
     setCpLoading(false);
   };
 
+  const handleLaunchKiosk = async () => {
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch {
+      // Fullscreen not supported or denied — continue anyway
+    }
+    onLogout?.();
+  };
+
   const checkInRate = stats.total > 0 ? Math.round((stats.checkedIn / stats.total) * 100) : 0;
 
   if (loading) {
@@ -312,6 +321,14 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
               title="Change password"
             >
               <KeyRound size={17} />
+            </button>
+
+            <button
+              onClick={handleLaunchKiosk}
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-colors text-sm font-medium"
+              title="Log out and launch fullscreen kiosk mode"
+            >
+              <Maximize2 size={15} /> Kiosk Mode
             </button>
 
             {onLogout && (
