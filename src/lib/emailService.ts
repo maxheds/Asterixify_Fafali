@@ -42,6 +42,7 @@ export const sendRegistrationEmail = async (data: RegistrationEmailData): Promis
       event_date: data.event_date,
       event_location: data.event_location,
       qr_url: `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.attendee_id)}&size=200x200`,
+      ticket_url: `${window.location.origin}/ticket/${data.attendee_id}`,
     };
 
     await emailjs.send(

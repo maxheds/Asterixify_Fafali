@@ -51,15 +51,15 @@ export function HomePage({ onRegister, onCheckIn }: HomePageProps) {
     ? { backgroundColor: primaryColor, borderColor: primaryColor }
     : {};
   const registerButtonClass = primaryColor
-    ? 'group relative w-full backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 border-2'
-    : 'group relative w-full bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 border-2 border-white/30 hover:bg-white/20';
+    ? 'group relative w-full backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 landscape:py-4 landscape:px-6 border-2'
+    : 'group relative w-full bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 landscape:py-4 landscape:px-6 border-2 border-white/30 hover:bg-white/20';
 
   const checkInButtonStyle = secondaryColor
     ? { backgroundColor: secondaryColor, borderColor: secondaryColor }
     : {};
   const checkInButtonClass = secondaryColor
-    ? 'group relative w-full backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 border-2'
-    : 'group relative w-full bg-black/20 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 border-2 border-white/20 hover:bg-black/30';
+    ? 'group relative w-full backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 landscape:py-4 landscape:px-6 border-2'
+    : 'group relative w-full bg-black/20 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-all duration-300 px-8 py-8 landscape:py-4 landscape:px-6 border-2 border-white/20 hover:bg-black/30';
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent">
@@ -68,20 +68,21 @@ export function HomePage({ onRegister, onCheckIn }: HomePageProps) {
         alt="Background"
         className="absolute inset-0 w-full h-full object-cover z-0"
       />
-      <div className="relative h-screen flex items-center justify-end pr-4 md:pr-6 lg:pr-8 bg-transparent" style={{ zIndex: 10 }}>
-        <div className="w-full max-w-md flex flex-col gap-6">
+      <div className="relative h-screen flex items-center justify-end pr-4 md:pr-6 lg:pr-8 landscape:pr-4 bg-transparent" style={{ zIndex: 10 }}>
+        <div className="w-full max-w-md flex flex-col gap-6 landscape:gap-3">
           <button
             onClick={onRegister}
             className={registerButtonClass}
             style={registerButtonStyle}
           >
-            <div className="relative flex items-center gap-5">
-              <div className="bg-white/30 backdrop-blur-sm w-16 h-16 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg flex-shrink-0">
-                <UserPlus size={36} className="text-white" strokeWidth={2.5} />
+            <div className="relative flex items-center gap-5 landscape:gap-3">
+              <div className="bg-white/30 backdrop-blur-sm w-16 h-16 landscape:w-11 landscape:h-11 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg flex-shrink-0">
+                <UserPlus size={36} className="text-white landscape:hidden" strokeWidth={2.5} />
+                <UserPlus size={24} className="text-white hidden landscape:block" strokeWidth={2.5} />
               </div>
               <div className="text-left flex-1">
-                <h2 className="text-3xl md:text-4xl font-black text-white mb-1.5 tracking-tight">New Registration</h2>
-                <p className="text-base text-white/80 font-medium">
+                <h2 className="text-3xl md:text-4xl landscape:text-xl font-black text-white mb-1.5 landscape:mb-0.5 tracking-tight">New Registration</h2>
+                <p className="text-base landscape:text-xs text-white/80 font-medium">
                   Sign up and receive your digital pass
                 </p>
               </div>
@@ -94,13 +95,14 @@ export function HomePage({ onRegister, onCheckIn }: HomePageProps) {
             className={checkInButtonClass}
             style={checkInButtonStyle}
           >
-            <div className="relative flex items-center gap-5">
-              <div className="bg-white/30 backdrop-blur-sm w-16 h-16 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg flex-shrink-0">
-                <LogIn size={36} className="text-white" strokeWidth={2.5} />
+            <div className="relative flex items-center gap-5 landscape:gap-3">
+              <div className="bg-white/30 backdrop-blur-sm w-16 h-16 landscape:w-11 landscape:h-11 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg flex-shrink-0">
+                <LogIn size={36} className="text-white landscape:hidden" strokeWidth={2.5} />
+                <LogIn size={24} className="text-white hidden landscape:block" strokeWidth={2.5} />
               </div>
               <div className="text-left flex-1">
-                <h2 className="text-3xl md:text-4xl font-black text-white mb-1.5 tracking-tight">Check-In</h2>
-                <p className="text-base text-white/80 font-medium">
+                <h2 className="text-3xl md:text-4xl landscape:text-xl font-black text-white mb-1.5 landscape:mb-0.5 tracking-tight">Check-In</h2>
+                <p className="text-base landscape:text-xs text-white/80 font-medium">
                   Already registered? Fast entry here
                 </p>
               </div>
