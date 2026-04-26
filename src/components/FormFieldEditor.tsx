@@ -35,7 +35,7 @@ export function FormFieldEditor({ eventId, currentFields, onClose, onSuccess }: 
   const [defaultFields, setDefaultFields] = useState<FormField[]>(() => {
     return DEFAULT_FIELDS.map(df => {
       const existing = currentFields.find(f => f.id === df.id);
-      return existing ? { ...df, active: existing.active ?? true, required: existing.required ?? df.required } : df;
+      return existing ? { ...df, label: existing.label ?? df.label, active: existing.active ?? true, required: existing.required ?? df.required, placeholder: existing.placeholder ?? df.placeholder } : df;
     });
   });
   const [customFields, setCustomFields] = useState<FormField[]>(
@@ -137,7 +137,7 @@ export function FormFieldEditor({ eventId, currentFields, onClose, onSuccess }: 
               <h3 className="text-lg font-bold text-slate-900">Default Fields</h3>
             </div>
             <p className="text-sm text-slate-600 mb-4">
-              These are the core fields included in every registration form. You cannot delete them, but you can view their configuration.
+              These are the core fields included in every registration form. You cannot delete them, but you can edit their labels, required setting, and placeholder text.
             </p>
             <div className="space-y-3">
               {defaultFields.map((field, index) => (
@@ -160,23 +160,31 @@ export function FormFieldEditor({ eventId, currentFields, onClose, onSuccess }: 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                         <div>
                           <label className="block text-xs font-medium text-slate-700 mb-1">Field Label</label>
-                          <div className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm">
-                            {field.label}
-                          </div>
+                          <input
+                            type="text"
+                            value={field.label}
+                            onChange={(e) => updateDefaultField(field.id, { label: e.target.value })}
+                            className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
                         </div>
 
                         <div>
                           <label className="block text-xs font-medium text-slate-700 mb-1">Field Type</label>
-                          <div className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm">
+                          <div className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm text-slate-500">
                             {field.type}
                           </div>
                         </div>
 
                         <div>
                           <label className="block text-xs font-medium text-slate-700 mb-1">Required</label>
-                          <div className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm">
-                            {field.required ? 'Yes' : 'No'}
-                          </div>
+                          <select
+                            value={field.required ? 'yes' : 'no'}
+                            onChange={(e) => updateDefaultField(field.id, { required: e.target.value === 'yes' })}
+                            className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          >
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                          </select>
                         </div>
                       </div>
 
