@@ -261,6 +261,11 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     return field ? field.required !== false : true;
   };
 
+  const getFieldLabel = (fieldId: string, fallback: string) => {
+    const field = allFormFields.find((f: any) => f.id === fieldId);
+    return field?.label ?? fallback;
+  };
+
   const totalSteps = customFields.length > 0 ? 4 : 3;
 
   const canProceedStep1 = (() => {
@@ -509,7 +514,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                   {isFieldActive('first_name') && (
                     <div>
                       <label className="block text-xs font-semibold text-lime-200 mb-1">
-                        First Name {isFieldRequired('first_name') && <span className="text-red-400">*</span>}
+                        {getFieldLabel('first_name', 'First Name')} {isFieldRequired('first_name') && <span className="text-red-400">*</span>}
                       </label>
                       <input
                         type="text"
@@ -525,7 +530,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                   {isFieldActive('last_name') && (
                     <div>
                       <label className="block text-xs font-semibold text-lime-200 mb-1">
-                        Last Name {isFieldRequired('last_name') && <span className="text-red-400">*</span>}
+                        {getFieldLabel('last_name', 'Last Name')} {isFieldRequired('last_name') && <span className="text-red-400">*</span>}
                       </label>
                       <input
                         type="text"
@@ -542,7 +547,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                 {isFieldActive('email') && (
                   <div>
                     <label className="block text-xs font-semibold text-lime-200 mb-1">
-                      Email Address {isFieldRequired('email') && <span className="text-red-400">*</span>}
+                      {getFieldLabel('email', 'Email Address')} {isFieldRequired('email') && <span className="text-red-400">*</span>}
                     </label>
                     <input
                       type="email"
@@ -564,7 +569,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                 {isFieldActive('phone') && (
                   <div>
                     <label className="block text-xs font-semibold text-lime-200 mb-1">
-                      Phone Number {isFieldRequired('phone') && <span className="text-red-400">*</span>}
+                      {getFieldLabel('phone', 'Phone Number')} {isFieldRequired('phone') && <span className="text-red-400">*</span>}
                     </label>
                     <input
                       type="tel"
@@ -586,7 +591,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                 {isFieldActive('gender') && (
                   <div>
                     <label className="block text-xs font-semibold text-lime-200 mb-1">
-                      Gender {isFieldRequired('gender') && <span className="text-red-400">*</span>}
+                      {getFieldLabel('gender', 'Gender')} {isFieldRequired('gender') && <span className="text-red-400">*</span>}
                     </label>
                     <select
                       required={isFieldRequired('gender')}
@@ -606,7 +611,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                 {isFieldActive('organization') && (
                   <div>
                     <label className="block text-xs font-semibold text-lime-200 mb-1">
-                      Company/Organization {isFieldRequired('organization') && <span className="text-red-400">*</span>}
+                      {getFieldLabel('organization', 'Company/Organization')} {isFieldRequired('organization') && <span className="text-red-400">*</span>}
                     </label>
                     <input
                       type="text"
@@ -622,7 +627,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                 {isFieldActive('age_group') && (
                   <div>
                     <label className="block text-xs font-semibold text-lime-200 mb-1">
-                      Age Group {isFieldRequired('age_group') && <span className="text-red-400">*</span>}
+                      {getFieldLabel('age_group', 'Age Group')} {isFieldRequired('age_group') && <span className="text-red-400">*</span>}
                     </label>
                     <select
                       required={isFieldRequired('age_group')}
@@ -645,7 +650,7 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                 {isFieldActive('ticket_type') && (
                   <div>
                     <label className="block text-xs font-semibold text-lime-200 mb-1">
-                      Ticket Type {isFieldRequired('ticket_type') && <span className="text-red-400">*</span>}
+                      {getFieldLabel('ticket_type', 'Ticket Type')} {isFieldRequired('ticket_type') && <span className="text-red-400">*</span>}
                     </label>
                     <select
                       required={isFieldRequired('ticket_type')}
@@ -699,46 +704,46 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div>
-                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">First Name</p>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">{getFieldLabel('first_name', 'First Name')}</p>
                       <p className="text-xs text-white font-medium">{formData.first_name}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Last Name</p>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">{getFieldLabel('last_name', 'Last Name')}</p>
                       <p className="text-xs text-white font-medium">{formData.last_name}</p>
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Email</p>
+                    <p className="text-[10px] font-semibold text-lime-300 mb-0.5">{getFieldLabel('email', 'Email')}</p>
                     <p className="text-xs text-white font-medium">{formData.email}</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div>
-                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Phone</p>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">{getFieldLabel('phone', 'Phone')}</p>
                       <p className="text-xs text-white font-medium">{formData.phone}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Gender</p>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">{getFieldLabel('gender', 'Gender')}</p>
                       <p className="text-xs text-white font-medium">{formData.gender}</p>
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Company/Organization</p>
+                    <p className="text-[10px] font-semibold text-lime-300 mb-0.5">{getFieldLabel('organization', 'Company/Organization')}</p>
                     <p className="text-xs text-white font-medium">{formData.organization}</p>
                   </div>
 
                   {formData.age_group && (
                     <div>
-                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Age Group</p>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">{getFieldLabel('age_group', 'Age Group')}</p>
                       <p className="text-xs text-white font-medium">{formData.age_group}</p>
                     </div>
                   )}
 
                   {formData.ticket_type && (
                     <div>
-                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">Ticket Type</p>
+                      <p className="text-[10px] font-semibold text-lime-300 mb-0.5">{getFieldLabel('ticket_type', 'Ticket Type')}</p>
                       <p className="text-xs text-white font-medium">{formData.ticket_type}</p>
                     </div>
                   )}
