@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { AdminLogin } from './AdminLogin';
 import { AdminPortal } from './AdminPortal';
 import { CheckInInterface } from './CheckInInterface';
@@ -34,7 +35,8 @@ export function AdminPage() {
     setIsAuthenticated(true);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     sessionStorage.removeItem('admin_authenticated');
     sessionStorage.removeItem('admin_username');
     sessionStorage.removeItem('admin_role');

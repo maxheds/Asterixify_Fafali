@@ -62,6 +62,17 @@ export function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
         return;
       }
 
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: import.meta.env.VITE_SUPABASE_ADMIN_EMAIL,
+        password: import.meta.env.VITE_SUPABASE_ADMIN_PASSWORD,
+      });
+
+      if (authError) {
+        setError('Admin session could not be established. Check VITE_SUPABASE_ADMIN_EMAIL and VITE_SUPABASE_ADMIN_PASSWORD in your .env file.');
+        setLoading(false);
+        return;
+      }
+
       onSuccess(data.username, data.role as 'master' | 'admin');
     } catch {
       setError('Authentication failed. Please try again.');
@@ -106,6 +117,11 @@ export function AdminLogin({ onSuccess, onCancel }: AdminLoginProps) {
         setLoading(false);
         return;
       }
+
+      await supabase.auth.signInWithPassword({
+        email: import.meta.env.VITE_SUPABASE_ADMIN_EMAIL,
+        password: import.meta.env.VITE_SUPABASE_ADMIN_PASSWORD,
+      });
 
       onSuccess(username.trim().toLowerCase(), 'master');
     } catch {

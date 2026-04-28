@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Attendee, Event } from '../lib/database.types';
-import { Search, CheckCircle2, Circle, Plus, Trash2, Printer, Edit2, RefreshCw, ChevronLeft, ChevronRight, Bell } from 'lucide-react';
+import { Search, CheckCircle2, Circle, Plus, Trash2, Printer, Edit2, RefreshCw, ChevronLeft, ChevronRight, Bell, AlertTriangle } from 'lucide-react';
 import { AddAttendeeForm } from './AddAttendeeForm';
 import { Badge } from './Badge';
 import { sendCheckInEmail, sendRegistrationEmail } from '../lib/emailService';
@@ -23,6 +23,11 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
   const [editingAttendee, setEditingAttendee] = useState<Attendee | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 50;
+
+  // Delete modal state
+  const [deleteTarget, setDeleteTarget] = useState<Attendee | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Resend modal state
   const [resendTarget, setResendTarget] = useState<Attendee | null>(null);
@@ -335,14 +340,24 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
     setLoading(false);
   };
 
-  const deleteAttendee = async (attendeeId: string) => {
-    if (!confirm('Are you sure you want to delete this attendee?')) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    setDeleteError('');
 
-    await supabase
+    const { error } = await supabase
       .from('attendees')
       .delete()
-      .eq('id', attendeeId);
+      .eq('id', deleteTarget.id);
 
+    if (error) {
+      setDeleteError('Failed to delete attendee. Please try again.');
+      setDeleteLoading(false);
+      return;
+    }
+
+    setDeleteTarget(null);
+    setDeleteLoading(false);
     loadAttendees();
   };
 
@@ -595,7 +610,7 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
                             {attendee.checked_in ? <Circle size={12} /> : <CheckCircle2 size={12} />}
                           </button>
                           <button
-                            onClick={() => deleteAttendee(attendee.id)}
+                            onClick={() => { setDeleteTarget(attendee); setDeleteError(''); }}
                             className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                             title="Delete Attendee"
                           >
@@ -638,6 +653,49 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
           );
         })()}
       </div>
+
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+            <div className="flex flex-col items-center text-center mb-5">
+              <div className="bg-red-100 p-4 rounded-full mb-4">
+                <AlertTriangle size={28} className="text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-1">Delete Attendee</h3>
+              <p className="text-slate-500 text-sm">
+                Are you sure you want to permanently delete{' '}
+                <span className="font-semibold text-slate-700">
+                  {deleteTarget.first_name} {deleteTarget.last_name}
+                </span>
+                ? This cannot be undone.
+              </p>
+            </div>
+
+            {deleteError && (
+              <div className="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-center">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-semibold disabled:opacity-50"
+              >
+                {deleteLoading ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showAddForm && (
         <AddAttendeeForm
