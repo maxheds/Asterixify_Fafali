@@ -8,7 +8,8 @@ import {
   DEFAULT_CHECKIN_TEMPLATE,
 } from '../lib/smsService';
 import { Event } from '../lib/database.types';
-import { Smartphone, RotateCcw, Send, CheckCircle2, AlertCircle, Link } from 'lucide-react';
+import { Smartphone, RotateCcw, Send, CheckCircle2, AlertCircle, Link, Mail } from 'lucide-react';
+import { sendBlastEmail } from '../lib/emailService';
 
 const VARIABLES = [
   { key: '{name}',             desc: 'Attendee first name' },
@@ -34,14 +35,16 @@ export function SmsManager() {
 
   // ── Pre-event reminders ───────────────────────────────────────────────────
   const [reminderEventId,   setReminderEventId]   = useState('');
+  const [reminderFilter,    setReminderFilter]    = useState<'all' | 'checked_in' | 'pending'>('all');
   const [reminderPhones,    setReminderPhones]    = useState<{ phone: string; first_name: string }[]>([]);
   const [reminderSending,   setReminderSending]   = useState(false);
   const [reminderProgress,  setReminderProgress]  = useState(0);
   const [reminderResult,    setReminderResult]    = useState<{ sent: number; failed: number } | null>(null);
   const [savingLinks,     setSavingLinks]     = useState(false);
   const [linksFeedback,   setLinksFeedback]   = useState('');
+  const [selectedLinkEventId, setSelectedLinkEventId] = useState('');
 
-  // ── Blast ─────────────────────────────────────────────────────────────────
+  // ── SMS Blast ─────────────────────────────────────────────────────────────
   const [blastEventId,  setBlastEventId]  = useState('');
   const [blastFilter,   setBlastFilter]   = useState<'all' | 'checked_in' | 'pending'>('all');
   const [blastPhones,   setBlastPhones]   = useState<string[]>([]);
@@ -49,6 +52,16 @@ export function SmsManager() {
   const [blastSending,  setBlastSending]  = useState(false);
   const [blastProgress, setBlastProgress] = useState(0);
   const [blastResult,   setBlastResult]   = useState<{ sent: number; failed: number } | null>(null);
+
+  // ── Email Blast ───────────────────────────────────────────────────────────
+  const [emailEventId,    setEmailEventId]    = useState('');
+  const [emailFilter,     setEmailFilter]     = useState<'all' | 'checked_in' | 'pending'>('all');
+  const [emailAttendees,  setEmailAttendees]  = useState<{ email: string; first_name: string; last_name: string }[]>([]);
+  const [emailSubject,    setEmailSubject]    = useState('');
+  const [emailMessage,    setEmailMessage]    = useState('');
+  const [emailSending,    setEmailSending]    = useState(false);
+  const [emailProgress,   setEmailProgress]   = useState(0);
+  const [emailResult,     setEmailResult]     = useState<{ sent: number; failed: number } | null>(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -59,8 +72,12 @@ export function SmsManager() {
   }, [blastEventId, blastFilter]);
 
   useEffect(() => {
+    if (emailEventId) loadEmailAttendees();
+  }, [emailEventId, emailFilter]);
+
+  useEffect(() => {
     if (reminderEventId) loadReminderAttendees();
-  }, [reminderEventId]);
+  }, [reminderEventId, reminderFilter]);
 
   const loadAll = async () => {
     setLoading(true);
@@ -81,6 +98,8 @@ export function SmsManager() {
       if (eventsRes.data.length > 0) {
         setBlastEventId(eventsRes.data[0].id);
         setReminderEventId(eventsRes.data[0].id);
+        setEmailEventId(eventsRes.data[0].id);
+        setSelectedLinkEventId(eventsRes.data[0].id);
       }
     }
     setLoading(false);
@@ -131,11 +150,10 @@ export function SmsManager() {
 
   const loadReminderAttendees = async () => {
     if (!reminderEventId) return;
-    const { data } = await supabase
-      .from('attendees')
-      .select('phone, first_name')
-      .eq('event_id', reminderEventId)
-      .eq('checked_in', false);
+    let query = supabase.from('attendees').select('phone, first_name').eq('event_id', reminderEventId);
+    if (reminderFilter === 'checked_in') query = query.eq('checked_in', true);
+    if (reminderFilter === 'pending')    query = query.eq('checked_in', false);
+    const { data } = await query;
     setReminderPhones((data ?? []).filter((a: { phone: string }) => a.phone) as { phone: string; first_name: string }[]);
   };
 
@@ -165,6 +183,39 @@ export function SmsManager() {
     }
     setReminderResult({ sent, failed });
     setReminderSending(false);
+  };
+
+  const loadEmailAttendees = async () => {
+    if (!emailEventId) return;
+    let query = supabase.from('attendees').select('email, first_name, last_name').eq('event_id', emailEventId);
+    if (emailFilter === 'checked_in') query = query.eq('checked_in', true);
+    if (emailFilter === 'pending')    query = query.eq('checked_in', false);
+    const { data } = await query;
+    setEmailAttendees((data ?? []).filter((a: any) => a.email) as { email: string; first_name: string; last_name: string }[]);
+  };
+
+  const handleEmailBlastSend = async () => {
+    if (!emailSubject.trim() || !emailMessage.trim() || emailAttendees.length === 0) return;
+    const event = events.find(e => e.id === emailEventId);
+    if (!event) return;
+    setEmailSending(true);
+    setEmailProgress(0);
+    let sent = 0; let failed = 0;
+    for (let i = 0; i < emailAttendees.length; i++) {
+      const att = emailAttendees[i];
+      const ok = await sendBlastEmail({
+        first_name:  att.first_name,
+        last_name:   att.last_name,
+        to_email:    att.email,
+        event_name:  event.name,
+        subject:     emailSubject,
+        message:     emailMessage,
+      });
+      if (ok) sent++; else failed++;
+      setEmailProgress(Math.round(((i + 1) / emailAttendees.length) * 100));
+    }
+    setEmailResult({ sent, failed });
+    setEmailSending(false);
   };
 
   const handleBlastSend = async () => {
@@ -318,7 +369,7 @@ export function SmsManager() {
         <div>
           <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Pre-event Reminders</h4>
           <p className="text-xs text-slate-500 mt-0.5">
-            Send a reminder to all pending (not yet checked-in) attendees with phone numbers. Uses the Registration SMS template prefixed with "REMINDER:".
+            Send a reminder SMS to attendees with phone numbers. Uses the Registration SMS template prefixed with "REMINDER:".
           </p>
         </div>
 
@@ -338,21 +389,39 @@ export function SmsManager() {
           </div>
         ) : (
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Event</label>
-              <select
-                value={reminderEventId}
-                onChange={e => setReminderEventId(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Event</label>
+                <select
+                  value={reminderEventId}
+                  onChange={e => setReminderEventId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Recipients</label>
+                <div className="flex gap-1">
+                  {(['all', 'checked_in', 'pending'] as const).map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setReminderFilter(f)}
+                      className={`flex-1 px-2 py-2 text-xs font-medium rounded-lg transition-colors ${
+                        reminderFilter === f ? 'bg-amber-600 text-white' : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      {f === 'all' ? 'All' : f === 'checked_in' ? 'Checked In' : 'Pending'}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-4 py-3">
               <Smartphone size={15} className="text-amber-600 flex-shrink-0" />
               <span className="text-sm text-slate-700">
-                <strong>{reminderPhones.length}</strong> pending attendee{reminderPhones.length !== 1 ? 's' : ''} will receive a reminder
+                <strong>{reminderPhones.length}</strong> attendee{reminderPhones.length !== 1 ? 's' : ''} will receive a reminder
               </span>
             </div>
 
@@ -387,54 +456,156 @@ export function SmsManager() {
 
       {/* ── Programme Links ──────────────────────────────────────────────────── */}
       <div className="space-y-4">
-        <div>
-          <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Programme Links</h4>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Set a programme or agenda URL per event. Use <code className="font-mono bg-slate-100 px-1 rounded text-slate-600">{'{programme_link}'}</code> in your template above to include it.
-          </p>
-        </div>
+        <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Programme Links</h4>
 
         {events.length === 0 ? (
           <p className="text-sm text-slate-400 py-4 text-center">No events found.</p>
         ) : (
-          <div className="space-y-2">
-            {events.map(event => (
-              <div key={event.id} className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-lg p-3">
-                <div className="flex-shrink-0">
-                  <div className={`w-2.5 h-2.5 rounded-full ${event.is_active ? 'bg-green-500' : 'bg-slate-300'}`} />
-                </div>
-                <div className="w-44 flex-shrink-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">{event.name}</p>
-                  <p className="text-xs text-slate-400">{new Date(event.event_date).toLocaleDateString()}</p>
-                </div>
-                <div className="relative flex-1">
-                  <Link size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="url"
-                    value={programmeLinks[event.id] || ''}
-                    onChange={e => setProgrammeLinks({ ...programmeLinks, [event.id]: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Event</label>
+              <select
+                value={selectedLinkEventId}
+                onChange={e => setSelectedLinkEventId(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Programme / Agenda URL</label>
+              <div className="relative">
+                <Link size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="url"
+                  value={selectedLinkEventId ? (programmeLinks[selectedLinkEventId] || '') : ''}
+                  onChange={e => selectedLinkEventId && setProgrammeLinks({ ...programmeLinks, [selectedLinkEventId]: e.target.value })}
+                  placeholder="https://..."
+                  className="w-full pl-8 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {linksFeedback && (
+              <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg p-3">
+                <CheckCircle2 size={15} className="text-green-500 flex-shrink-0" />
+                <p className="text-green-700 text-sm">{linksFeedback}</p>
+              </div>
+            )}
+            <button
+              onClick={saveProgrammeLinks}
+              disabled={savingLinks || !selectedLinkEventId}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {savingLinks ? 'Saving...' : 'Save Link'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Email Blast ─────────────────────────────────────────────────────── */}
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-2">
+            <Mail size={14} className="text-blue-600" /> Email Blast
+          </h4>
+        </div>
+
+        {emailResult ? (
+          <div className="text-center py-10 bg-slate-50 border border-slate-200 rounded-xl">
+            <CheckCircle2 size={44} className="text-green-500 mx-auto mb-3" />
+            <p className="text-lg font-bold text-slate-900 mb-1">Email Blast Sent!</p>
+            <p className="text-slate-600 text-sm">
+              {emailResult.sent} sent successfully{emailResult.failed > 0 && `, ${emailResult.failed} failed`}
+            </p>
+            <button
+              onClick={() => { setEmailResult(null); setEmailSubject(''); setEmailMessage(''); setEmailProgress(0); }}
+              className="mt-5 px-5 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium"
+            >
+              Send Another
+            </button>
+          </div>
+        ) : (
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Event</label>
+                <select
+                  value={emailEventId}
+                  onChange={e => setEmailEventId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">Recipients</label>
+                <div className="flex gap-1">
+                  {(['all', 'checked_in', 'pending'] as const).map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setEmailFilter(f)}
+                      className={`flex-1 px-2 py-2 text-xs font-medium rounded-lg transition-colors ${
+                        emailFilter === f ? 'bg-blue-600 text-white' : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      {f === 'all' ? 'All' : f === 'checked_in' ? 'Checked In' : 'Pending'}
+                    </button>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
 
-        {linksFeedback && (
-          <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg p-3">
-            <CheckCircle2 size={15} className="text-green-500 flex-shrink-0" />
-            <p className="text-green-700 text-sm">{linksFeedback}</p>
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-4 py-3">
+              <Mail size={15} className="text-blue-600 flex-shrink-0" />
+              <span className="text-sm text-slate-700">
+                <strong>{emailAttendees.length}</strong> recipient{emailAttendees.length !== 1 ? 's' : ''} will receive this email
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Subject</label>
+              <input
+                type="text"
+                value={emailSubject}
+                onChange={e => setEmailSubject(e.target.value)}
+                placeholder="e.g. Important update about your registration"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Message</label>
+              <textarea
+                value={emailMessage}
+                onChange={e => setEmailMessage(e.target.value)}
+                rows={5}
+                placeholder="Type your message here..."
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            {emailSending && (
+              <div>
+                <div className="flex justify-between text-xs text-slate-500 mb-1">
+                  <span>Sending emails…</span><span>{emailProgress}%</span>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-2">
+                  <div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: `${emailProgress}%` }} />
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={handleEmailBlastSend}
+              disabled={emailSending || !emailSubject.trim() || !emailMessage.trim() || emailAttendees.length === 0}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold disabled:opacity-50"
+            >
+              <Mail size={15} />
+              {emailSending ? 'Sending…' : `Send to ${emailAttendees.length} recipient${emailAttendees.length !== 1 ? 's' : ''}`}
+            </button>
           </div>
         )}
-        <button
-          onClick={saveProgrammeLinks}
-          disabled={savingLinks || events.length === 0}
-          className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-        >
-          {savingLinks ? 'Saving...' : 'Save Programme Links'}
-        </button>
       </div>
 
       {/* ── SMS Blast ───────────────────────────────────────────────────────── */}

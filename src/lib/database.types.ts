@@ -262,6 +262,24 @@ export type Attendee = Database['public']['Tables']['attendees']['Row'];
 export type CheckInHistory = Database['public']['Tables']['check_in_history']['Row'];
 export type AdminUser = Database['public']['Tables']['admin_users']['Row'];
 
+export interface WaitlistEntry {
+  id: string;
+  event_id: string;
+  salutation: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  gender: string;
+  organization: string;
+  age_group: string;
+  ticket_type: string;
+  special_requirements: string;
+  form_data: any;
+  registration_source: string;
+  created_at: string;
+}
+
 export interface FeedbackQuestion {
   id: string;
   app_id: string;

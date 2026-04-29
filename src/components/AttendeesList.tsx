@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Attendee, Event } from '../lib/database.types';
+import { checkAndPromote } from '../lib/waitlist';
 import { Search, CheckCircle2, Circle, Plus, Trash2, Printer, Edit2, RefreshCw, ChevronLeft, ChevronRight, Bell, AlertTriangle } from 'lucide-react';
 import { AddAttendeeForm } from './AddAttendeeForm';
 import { Badge } from './Badge';
@@ -359,6 +360,8 @@ export function AttendeesList({ eventId }: AttendeesListProps) {
     setDeleteTarget(null);
     setDeleteLoading(false);
     loadAttendees();
+    // Promote next waitlist person if event has a capacity limit
+    checkAndPromote(deleteTarget.event_id);
   };
 
   const toggleCheckIn = async (attendee: Attendee) => {

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Event, Attendee } from '../lib/database.types';
-import { Calendar, MapPin, CheckCircle2, ChevronRight, ChevronLeft, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, CheckCircle2, ChevronRight, ChevronLeft, AlertCircle, Clock } from 'lucide-react';
 import { Badge } from './Badge';
-import { sendRegistrationEmail } from '../lib/emailService';
+import { sendRegistrationEmail, sendWaitlistConfirmationEmail } from '../lib/emailService';
 import { sendRegistrationSMS, isEmailEnabled } from '../lib/smsService';
 
 interface RegistrationFormProps {
@@ -33,6 +33,8 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
   const [countdown, setCountdown] = useState(5);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [autoFilled, setAutoFilled] = useState(false);
+  const [isWaitlist, setIsWaitlist] = useState(false);
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
 
   useEffect(() => {
     loadEvents();
@@ -89,15 +91,20 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     setLoading(true);
     setError('');
 
-    // Capacity check
+    // Capacity check — offer waitlist if full
     if (selectedEvent?.max_attendees) {
       const { count } = await supabase
         .from('attendees')
         .select('*', { count: 'exact', head: true })
         .eq('event_id', selectedEventId);
       if (count !== null && count >= selectedEvent.max_attendees) {
-        setError('This event has reached its maximum capacity. Registration is now closed.');
-        setLoading(false);
+        if (!isWaitlist) {
+          setIsWaitlist(true);
+          setLoading(false);
+          return;
+        }
+        // User confirmed waitlist — submit there instead
+        await handleWaitlistSubmit();
         return;
       }
     }
@@ -194,6 +201,65 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
           onSuccess();
         }
       }, 5000);
+    }
+  };
+
+  const handleWaitlistSubmit = async () => {
+    // Duplicate check in waitlist table
+    const { data: existingWaitlist } = await supabase
+      .from('waitlist')
+      .select('id')
+      .eq('event_id', selectedEventId)
+      .eq('email', formData.email.trim().toLowerCase())
+      .maybeSingle();
+
+    if (existingWaitlist) {
+      setError('You are already on the waitlist for this event.');
+      setLoading(false);
+      return;
+    }
+
+    const { error: wErr } = await supabase.from('waitlist').insert({
+      ...formData,
+      event_id: selectedEventId,
+      registration_source: 'online',
+      form_data: customFieldValues,
+    });
+
+    setLoading(false);
+
+    if (wErr) {
+      setError('Could not join the waitlist. Please try again.');
+      return;
+    }
+
+    setWaitlistSubmitted(true);
+
+    if (selectedEvent) {
+      const eventDate = new Date(selectedEvent.event_date).toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      });
+      const emailOn = await isEmailEnabled();
+      await Promise.all([
+        emailOn
+          ? sendWaitlistConfirmationEmail({
+              first_name:     formData.first_name,
+              last_name:      formData.last_name,
+              to_email:       formData.email,
+              event_name:     selectedEvent.name,
+              event_date:     eventDate,
+              event_location: selectedEvent.location || 'TBA',
+            })
+          : Promise.resolve(),
+        sendRegistrationSMS({
+          first_name:     formData.first_name,
+          phone:          formData.phone || '',
+          event_name:     selectedEvent.name,
+          event_date:     eventDate,
+          event_location: selectedEvent.location || 'TBA',
+          programme_link: selectedEvent.programme_link || '',
+        }),
+      ]);
     }
   };
 
@@ -326,7 +392,49 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
     setCountdown(5);
     setError('');
     setAutoFilled(false);
+    setIsWaitlist(false);
+    setWaitlistSubmitted(false);
   };
+
+  if (waitlistSubmitted && selectedEvent) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 py-8 px-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+            <div className="bg-amber-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Clock size={48} className="text-amber-600" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-900 mb-3">You're on the Waitlist!</h2>
+            <p className="text-lg text-slate-700 mb-2">
+              <span className="font-semibold">{selectedEvent.name}</span> is currently full.
+            </p>
+            <p className="text-slate-600 mb-6">
+              We've added you to the waitlist. If a spot opens up, you'll be automatically moved in and notified by email and SMS.
+            </p>
+            <p className="text-sm text-slate-500 mb-8">
+              A confirmation has been sent to <span className="font-medium">{formData.email}</span>
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={handleReset}
+                className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium"
+              >
+                Register Another Person
+              </button>
+              {onSuccess && (
+                <button
+                  onClick={onSuccess}
+                  className="px-6 py-3 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors font-medium"
+                >
+                  Back to Home
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (submitted && registeredAttendee && selectedEvent) {
     return (
@@ -690,7 +798,19 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
 
               {((currentStep === 3 && customFields.length === 0) || (currentStep === 4 && customFields.length > 0)) && (
                 <>
-                  <h3 className="text-lg sm:text-xl font-bold text-lime-300 mb-3">Review and Print Your Badge</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-lime-300 mb-3">
+                    {isWaitlist ? 'Review and Join Waitlist' : 'Review and Print Your Badge'}
+                  </h3>
+
+                  {isWaitlist && (
+                    <div className="bg-amber-900/80 backdrop-blur-sm border border-amber-500/50 rounded-xl p-3 flex items-start gap-2 mb-3">
+                      <Clock size={18} className="text-amber-300 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h3 className="text-amber-100 font-semibold text-sm">This event is full</h3>
+                        <p className="text-amber-200 text-xs mt-0.5">Submitting below will place you on the waitlist. You'll be automatically registered and notified if a spot opens up.</p>
+                      </div>
+                    </div>
+                  )}
 
                 <div className="bg-slate-700/60 backdrop-blur-sm rounded-lg p-2 space-y-2 border border-lime-500/20">
                   {formData.salutation && (
@@ -800,9 +920,11 @@ export function RegistrationForm({ onSuccess }: RegistrationFormProps = {}) {
                     type="button"
                     onClick={handleSubmit}
                     disabled={loading || !selectedEventId}
-                    className="flex-1 px-4 py-3 text-base bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-lime-600/20"
+                    className={`flex-1 px-4 py-3 text-base text-white rounded-lg transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg ${isWaitlist ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/20' : 'bg-lime-600 hover:bg-lime-700 shadow-lime-600/20'}`}
                   >
-                    {loading ? 'Registering...' : 'Complete Registration'}
+                    {loading
+                      ? (isWaitlist ? 'Joining Waitlist...' : 'Registering...')
+                      : (isWaitlist ? 'Join Waitlist' : 'Complete Registration')}
                   </button>
                 )}
               </div>

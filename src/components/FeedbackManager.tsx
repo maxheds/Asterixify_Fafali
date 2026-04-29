@@ -22,6 +22,7 @@ export function FeedbackManager() {
   const [adding, setAdding] = useState(false);
 
   const [sendEventId, setSendEventId] = useState('');
+  const [sendFilter, setSendFilter] = useState<'all' | 'checked_in' | 'pending'>('all');
   const [sendFeedback, setSendFeedback] = useState('');
   const [sendError, setSendError] = useState('');
   const [sending, setSending] = useState(false);
@@ -88,14 +89,14 @@ export function FeedbackManager() {
     const event = events.find(e => e.id === sendEventId);
     if (!event) { setSending(false); return; }
 
-    const { data: attendees } = await supabase
-      .from('attendees')
-      .select('id, phone, first_name')
-      .eq('event_id', sendEventId);
+    let query = supabase.from('attendees').select('id, phone, first_name').eq('event_id', sendEventId);
+    if (sendFilter === 'checked_in') query = query.eq('checked_in', true);
+    if (sendFilter === 'pending')    query = query.eq('checked_in', false);
+    const { data: attendees } = await query;
 
     const withPhones = (attendees || []).filter((a: { phone: string }) => a.phone);
     if (withPhones.length === 0) {
-      setSendError('No checked-in attendees with phone numbers found for this event.');
+      setSendError('No attendees with phone numbers found for this selection.');
       setSending(false);
       return;
     }
@@ -217,28 +218,47 @@ export function FeedbackManager() {
         <div>
           <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Send Feedback Requests</h4>
           <p className="text-xs text-slate-500 mt-0.5">
-            Sends a personalised SMS with a unique feedback link to all checked-in attendees who have a phone number.
+            Sends a personalised SMS with a unique feedback link to attendees who have a phone number.
           </p>
         </div>
 
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
-          <div className="flex gap-3 flex-wrap">
-            <select
-              value={sendEventId}
-              onChange={e => setSendEventId(e.target.value)}
-              className="flex-1 min-w-48 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select event...</option>
-              {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-            </select>
-            <button
-              onClick={handleSendRequests}
-              disabled={!sendEventId || sending}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex-shrink-0"
-            >
-              <Send size={15} /> {sending ? 'Sending...' : 'Send Requests'}
-            </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Event</label>
+              <select
+                value={sendEventId}
+                onChange={e => setSendEventId(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select event...</option>
+                {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">Recipients</label>
+              <div className="flex gap-1">
+                {(['all', 'checked_in', 'pending'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setSendFilter(f)}
+                    className={`flex-1 px-2 py-2 text-xs font-medium rounded-lg transition-colors ${
+                      sendFilter === f ? 'bg-purple-600 text-white' : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {f === 'all' ? 'All' : f === 'checked_in' ? 'Checked In' : 'Pending'}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
+          <button
+            onClick={handleSendRequests}
+            disabled={!sendEventId || sending}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 font-medium"
+          >
+            <Send size={15} /> {sending ? 'Sending...' : 'Send Feedback Requests'}
+          </button>
 
           {sendError && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg p-3">

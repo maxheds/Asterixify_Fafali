@@ -6,7 +6,7 @@ import {
   Plus, Calendar, Download, Upload, Settings, Edit2, BarChart3,
   Filter, Trash2, Users, KeyRound, Eye, EyeOff, AlertCircle,
   CheckCircle2, Smartphone, ChevronLeft, ChevronRight, FileText, Maximize2,
-  LayoutDashboard, Copy, MessageCircle,
+  LayoutDashboard, Copy, MessageCircle, Clock,
 } from 'lucide-react';
 import { EventForm } from './EventForm';
 import { AttendeesList } from './AttendeesList';
@@ -18,6 +18,7 @@ import { NotificationSettings } from './NotificationSettings';
 import { SmsManager } from './SmsManager';
 import { LiveDashboard } from './LiveDashboard';
 import { FeedbackManager } from './FeedbackManager';
+import { WaitlistManager } from './WaitlistManager';
 
 interface AdminPortalProps {
   onNavigateToCheckIn: (eventId: string) => void;
@@ -27,7 +28,7 @@ interface AdminPortalProps {
 }
 
 type ActiveTab = 'events' | 'settings' | 'sms' | 'users' | 'feedback';
-type EventView = 'attendees' | 'dashboard';
+type EventView = 'attendees' | 'dashboard' | 'waitlist';
 
 interface ChangePasswordForm {
   currentPassword: string;
@@ -53,6 +54,7 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
   const [exportFilter, setExportFilter] = useState<'all' | 'checked_in' | 'pending'>('all');
   const [eventView, setEventView] = useState<EventView>('attendees');
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Change-password state
   const [cpForm, setCpForm]           = useState<ChangePasswordForm>({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -199,7 +201,6 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
     }
   };
 
-  // ── Change password ───────────────────────────────────────────────────────
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setCpError(''); setCpSuccess('');
@@ -254,79 +255,109 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
 
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-slate-200 shadow-sm flex-shrink-0 print:hidden">
-        <div className="px-4 sm:px-6 lg:px-8 flex items-center gap-3 h-16">
+        <div className="px-4 sm:px-6 lg:px-8 flex items-center gap-4 h-16">
 
-          {/* Left: title + user */}
-          <div className="flex-shrink-0 min-w-0 w-44 lg:w-56">
-            <h1 className="text-sm font-bold text-slate-900 tracking-tight truncate">Asterixify Event System</h1>
-            <p className="text-xs text-slate-500 truncate">
-              {adminUsername}
-              <span className={`ml-1.5 px-1.5 py-0.5 text-xs font-semibold rounded-full ${adminRole === 'master' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}`}>
-                {adminRole}
-              </span>
-            </p>
+          {/* Title */}
+          <div className="flex-shrink-0">
+            <h1 className="text-sm font-bold text-slate-900 tracking-tight">Asterixify</h1>
+            <p className="text-xs text-slate-400">Event Management</p>
           </div>
 
-          {/* Centre: tabs */}
-          <div className="flex-1 flex justify-center">
-            <div className="flex bg-slate-100 rounded-xl p-1 gap-0.5">
-              {([
-                { key: 'events',   icon: <Calendar size={13} />,       label: 'Events'   },
-                { key: 'settings', icon: <Settings size={13} />,       label: 'Settings' },
-                { key: 'sms',      icon: <Smartphone size={13} />,     label: 'SMS'      },
-                { key: 'feedback', icon: <MessageCircle size={13} />,  label: 'Feedback' },
-                ...(adminRole === 'master' ? [{ key: 'users', icon: <Users size={13} />, label: 'Users' }] : []),
-              ] as { key: ActiveTab; icon: React.ReactNode; label: string }[]).map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${activeTab === tab.key ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  {tab.icon} {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div className="w-px h-8 bg-slate-200 flex-shrink-0" />
 
-          {/* Right: check-in progress + actions */}
-          <div className="flex-shrink-0 flex items-center gap-2">
-            {selectedEvent && activeTab === 'events' && (
-              <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
-                <div className="w-20 bg-slate-200 rounded-full h-1.5">
-                  <div className="bg-green-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${checkInRate}%` }} />
-                </div>
-                <span className="text-xs font-bold text-slate-700">{checkInRate}%</span>
-                <span className="text-xs text-slate-400">{stats.checkedIn}/{stats.total}</span>
-              </div>
-            )}
+          {/* Navigation */}
+          <div className="flex-1 flex items-center gap-1">
+            {/* Primary: Events */}
+            <button
+              onClick={() => setActiveTab('events')}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+                activeTab === 'events'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Calendar size={15} /> Events
+            </button>
+
+            <div className="w-px h-5 bg-slate-200 mx-2 flex-shrink-0" />
+
+            {/* Secondary tabs — master only */}
+            {adminRole === 'master' && ([
+              { key: 'settings', icon: <Settings size={13} />,      label: 'Settings'  },
+              { key: 'sms',      icon: <Smartphone size={13} />,    label: 'Communications' },
+              { key: 'feedback', icon: <MessageCircle size={13} />, label: 'Feedback'  },
+              { key: 'users',    icon: <Users size={13} />,         label: 'Users'     },
+            ] as { key: ActiveTab; icon: React.ReactNode; label: string }[]).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                  activeTab === tab.key
+                    ? 'bg-slate-800 text-white'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
 
             {activeTab === 'events' && (
-              <button
-                onClick={() => setShowEventForm(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-semibold"
-              >
-                <Plus size={14} /> New Event
-              </button>
+              <>
+                <div className="flex-1" />
+                <button
+                  onClick={() => setShowEventForm(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-semibold"
+                >
+                  <Plus size={14} /> New Event
+                </button>
+              </>
             )}
+          </div>
 
-            <button
-              onClick={() => { setShowChangePassword(true); setCpError(''); setCpSuccess(''); }}
-              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all"
-              title="Change password"
-            >
-              <KeyRound size={16} />
-            </button>
+          {/* Profile + Logout */}
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <div className="relative">
+              {showProfileMenu && (
+                <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+              )}
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition-colors relative z-50"
+              >
+                <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                  {adminUsername.charAt(0).toUpperCase()}
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-xs font-semibold text-slate-900 leading-none">{adminUsername}</p>
+                  <p className={`text-xs leading-none mt-0.5 font-medium ${adminRole === 'master' ? 'text-purple-600' : 'text-slate-400'}`}>
+                    {adminRole}
+                  </p>
+                </div>
+              </button>
 
-            <button
-              onClick={handleLaunchKiosk}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-colors text-xs font-semibold"
-              title="Launch fullscreen kiosk mode"
-            >
-              <Maximize2 size={14} /> Kiosk
-            </button>
+              {showProfileMenu && (
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                  <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+                    <p className="text-sm font-semibold text-slate-900">{adminUsername}</p>
+                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium mt-1 ${adminRole === 'master' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-600'}`}>
+                      {adminRole}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => { setShowChangePassword(true); setCpError(''); setCpSuccess(''); setShowProfileMenu(false); }}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    <KeyRound size={14} className="text-slate-400" /> Change Password
+                  </button>
+                </div>
+              )}
+            </div>
 
             {onLogout && (
-              <button onClick={onLogout} className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-semibold">
+              <button
+                onClick={onLogout}
+                className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-semibold"
+              >
                 Logout
               </button>
             )}
@@ -337,39 +368,34 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
       {/* ── Main content ─────────────────────────────────────────────────── */}
       <div className="px-4 sm:px-6 lg:px-8 pb-6 pt-4 flex-1 min-h-0 w-full print:hidden">
 
-        {/* Settings tab */}
         {activeTab === 'settings' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full overflow-y-auto">
             <NotificationSettings />
           </div>
         )}
 
-        {/* SMS tab */}
         {activeTab === 'sms' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full overflow-y-auto">
             <SmsManager />
           </div>
         )}
 
-        {/* Feedback tab */}
         {activeTab === 'feedback' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full overflow-y-auto">
             <FeedbackManager />
           </div>
         )}
 
-        {/* Users tab */}
         {activeTab === 'users' && adminRole === 'master' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full overflow-y-auto">
             <UserManagement currentUsername={adminUsername} />
           </div>
         )}
 
-        {/* Events tab */}
         {activeTab === 'events' && (
-          <div className="flex gap-6 h-full">
+          <div className="flex gap-5 h-full">
 
-            {/* Events sidebar */}
+            {/* ── Events sidebar ── */}
             <div className={`transition-all duration-300 flex-shrink-0 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden ${sidebarCollapsed ? 'w-12' : 'w-64'}`}>
               {sidebarCollapsed ? (
                 <div className="flex flex-col items-center gap-2 py-3">
@@ -384,7 +410,7 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
                     <button
                       key={event.id}
                       onClick={() => setSelectedEvent(event)}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-all flex-shrink-0 ${selectedEvent?.id === event.id ? 'ring-2 ring-blue-600 ring-offset-1' : ''} ${event.is_active ? 'bg-green-500' : 'bg-slate-400'}`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-all flex-shrink-0 ${selectedEvent?.id === event.id ? 'ring-2 ring-blue-600 ring-offset-1' : ''} ${event.is_active ? 'bg-blue-500' : 'bg-slate-400'}`}
                       title={event.name}
                     >
                       {event.name.charAt(0).toUpperCase()}
@@ -393,73 +419,89 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between px-4 pt-4 pb-3 flex-shrink-0">
-                    <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-                      <Calendar size={18} className="text-blue-600" /> Events
+                  <div className="flex items-center justify-between px-4 pt-4 pb-3 flex-shrink-0 border-b border-slate-100">
+                    <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                      <Calendar size={15} className="text-blue-600" /> Events
                     </h2>
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => setShowAllEvents(!showAllEvents)}
-                        className={`p-1.5 rounded-lg transition-colors ${showAllEvents ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        className={`p-1.5 rounded-lg transition-colors ${showAllEvents ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                         title={showAllEvents ? 'Show active only' : 'Show all events'}
                       >
-                        <Filter size={15} />
+                        <Filter size={13} />
                       </button>
                       <button
                         onClick={() => setSidebarCollapsed(true)}
-                        className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+                        className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
                         title="Collapse sidebar"
                       >
-                        <ChevronLeft size={15} />
+                        <ChevronLeft size={13} />
                       </button>
                     </div>
                   </div>
-                  <div className="space-y-2 overflow-y-auto flex-1 px-3 pb-3">
-                    {displayedEvents.map((event) => (
-                      <div
-                        key={event.id}
-                        className={`w-full p-3 rounded-lg transition-all ${selectedEvent?.id === event.id ? 'bg-blue-50 border-2 border-blue-600' : 'bg-slate-50 border-2 border-transparent hover:border-slate-300'}`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <button onClick={() => setSelectedEvent(event)} className="flex-1 text-left min-w-0">
-                            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                              <span className="font-medium text-slate-900 text-sm truncate">{event.name}</span>
+
+                  <div className="space-y-1.5 overflow-y-auto flex-1 p-3">
+                    {displayedEvents.map((event) => {
+                      const count = eventCounts[event.id] || 0;
+                      const isSelected = selectedEvent?.id === event.id;
+                      return (
+                        <div
+                          key={event.id}
+                          className={`rounded-xl border-2 transition-all ${isSelected ? 'bg-blue-50 border-blue-500' : 'bg-slate-50 border-transparent hover:border-slate-200 hover:bg-white'}`}
+                        >
+                          <div className="p-3">
+                            <div className="flex items-start justify-between gap-1 mb-2">
+                              <button onClick={() => setSelectedEvent(event)} className="flex-1 text-left min-w-0">
+                                <p className={`font-semibold text-sm truncate leading-tight ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>
+                                  {event.name}
+                                </p>
+                                <p className="text-xs text-slate-400 mt-0.5">
+                                  {new Date(event.event_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </p>
+                              </button>
+                              <div className="flex gap-0.5 flex-shrink-0">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setEventToEdit(event); setShowEventForm(true); }}
+                                  className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  title="Edit"
+                                >
+                                  <Edit2 size={11} />
+                                </button>
+                                <button
+                                  onClick={(e) => cloneEvent(event, e)}
+                                  className="p-1 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                  title="Duplicate"
+                                >
+                                  <Copy size={11} />
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setEventToDelete(event); }}
+                                  className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 size={11} />
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 mb-0.5">
+                            <div className="flex items-center justify-between">
                               <button
                                 onClick={(e) => toggleEventActive(event, e)}
-                                className={`px-1.5 py-0.5 text-xs font-semibold rounded-full transition-colors hover:opacity-80 ${event.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'}`}
-                                title="Click to toggle active/inactive"
+                                className={`px-2 py-0.5 text-xs font-semibold rounded-full transition-colors ${event.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-500'}`}
                               >
                                 {event.is_active ? 'Active' : 'Inactive'}
                               </button>
-                              {eventCounts[event.id] !== undefined && (
-                                <span className="text-xs text-slate-400">{eventCounts[event.id]} attendees</span>
-                              )}
+                              <span className={`text-xs font-semibold ${isSelected ? 'text-blue-700' : 'text-slate-400'}`}>
+                                {count} {count === 1 ? 'attendee' : 'attendees'}
+                              </span>
                             </div>
-                            <div className="text-xs text-slate-500">{new Date(event.event_date).toLocaleDateString()}</div>
-                            <div className="text-xs text-slate-400 mt-0.5 truncate">{event.location}</div>
-                          </button>
-                          <div className="flex gap-1 flex-shrink-0">
-                            <button onClick={(e) => { e.stopPropagation(); setEventToEdit(event); setShowEventForm(true); }}
-                              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors" title="Edit">
-                              <Edit2 size={13} />
-                            </button>
-                            <button onClick={(e) => cloneEvent(event, e)}
-                              className="p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Duplicate event">
-                              <Copy size={13} />
-                            </button>
-                            <button onClick={(e) => { e.stopPropagation(); setEventToDelete(event); }}
-                              className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                              <Trash2 size={13} />
-                            </button>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {displayedEvents.length === 0 && (
-                      <div className="text-center text-slate-500 text-sm py-8">
-                        {showAllEvents ? 'No events yet.' : 'No active events. Toggle filter to see all.'}
+                      <div className="text-center text-slate-400 text-sm py-10">
+                        {showAllEvents ? 'No events yet.' : 'No active events.'}
                       </div>
                     )}
                   </div>
@@ -467,23 +509,23 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
               )}
             </div>
 
-            {/* Attendees panel */}
+            {/* ── Main panel ── */}
             <div className="flex-1 flex flex-col min-h-0 min-w-0">
               {selectedEvent ? (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col flex-1 min-h-0">
-                  {/* Panel header — two rows */}
-                  <div className="px-5 pt-4 pb-3 border-b border-slate-200 flex-shrink-0 space-y-3">
 
-                    {/* Row 1: event name + view toggle + check-in button */}
+                  {/* Panel header */}
+                  <div className="px-5 pt-4 pb-3 border-b border-slate-100 flex-shrink-0 space-y-3">
+
+                    {/* Row 1: event name + view toggle + primary actions */}
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="min-w-0">
-                          <h2 className="text-sm font-semibold text-slate-900 truncate">{selectedEvent.name}</h2>
-                          {eventView === 'attendees' && selectedEvent.custom_fields?.length > 0 && (
-                            <p className="text-xs text-slate-400 truncate mt-0.5">
-                              {selectedEvent.custom_fields.map((f: { label: string }) => f.label).join(' · ')}
-                            </p>
-                          )}
+                          <h2 className="text-base font-bold text-slate-900 truncate">{selectedEvent.name}</h2>
+                          <p className="text-xs text-slate-400 mt-0.5 truncate">
+                            {new Date(selectedEvent.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            {selectedEvent.location && ` · ${selectedEvent.location}`}
+                          </p>
                         </div>
                         <div className="flex bg-slate-100 border border-slate-200 rounded-lg overflow-hidden flex-shrink-0">
                           <button
@@ -493,6 +535,12 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
                             <Users size={12} /> Attendees
                           </button>
                           <button
+                            onClick={() => setEventView('waitlist')}
+                            className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors ${eventView === 'waitlist' ? 'bg-amber-500 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
+                          >
+                            <Clock size={12} /> Waitlist
+                          </button>
+                          <button
                             onClick={() => setEventView('dashboard')}
                             className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium transition-colors ${eventView === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
                           >
@@ -500,33 +548,64 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
                           </button>
                         </div>
                       </div>
-                      <button
-                        onClick={() => onNavigateToCheckIn(selectedEvent.id)}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-semibold flex-shrink-0 shadow-sm"
-                      >
-                        Check-In Mode
-                      </button>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => onNavigateToCheckIn(selectedEvent.id)}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-semibold shadow-sm"
+                        >
+                          Check-In Mode
+                        </button>
+                        <button
+                          onClick={handleLaunchKiosk}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-colors text-xs font-semibold"
+                          title="Launch fullscreen kiosk mode"
+                        >
+                          <Maximize2 size={12} /> Kiosk
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Row 2: secondary actions */}
+                    {/* Row 2: stat cards */}
+                    <div className="flex items-center gap-2">
+                      {[
+                        { label: 'Total',      value: stats.total,                      color: 'text-slate-800', bg: 'bg-slate-50 border-slate-200'   },
+                        { label: 'Checked In', value: stats.checkedIn,                  color: 'text-green-700', bg: 'bg-green-50 border-green-200'   },
+                        { label: 'Pending',    value: stats.total - stats.checkedIn,    color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200'   },
+                        { label: 'Rate',       value: `${checkInRate}%`,                color: 'text-blue-700',  bg: 'bg-blue-50 border-blue-200'     },
+                      ].map(stat => (
+                        <div key={stat.label} className={`border rounded-lg px-3 py-1.5 text-center min-w-[58px] ${stat.bg}`}>
+                          <p className={`text-lg font-bold leading-none ${stat.color}`}>{stat.value}</p>
+                          <p className="text-xs text-slate-500 mt-0.5 whitespace-nowrap">{stat.label}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Row 3: secondary actions */}
                     <div className="flex items-center gap-2 flex-wrap">
-                      <button onClick={() => setShowFormEditor(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
+                      <button
+                        onClick={() => setShowFormEditor(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium"
+                      >
                         <Settings size={12} /> Form Fields
                         {selectedEvent.custom_fields?.length > 0 && (
                           <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">{selectedEvent.custom_fields.length}</span>
                         )}
                       </button>
-                      <button onClick={() => setShowReports(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-50 text-violet-700 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors text-xs font-medium">
+                      <button
+                        onClick={() => setShowReports(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-50 text-violet-700 border border-violet-200 rounded-lg hover:bg-violet-100 transition-colors text-xs font-medium"
+                      >
                         <BarChart3 size={12} /> Reports
-                      </button>
-                      <button onClick={() => setShowImport(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
-                        <Upload size={12} /> Import
                       </button>
 
                       <div className="flex-1" />
+
+                      <button
+                        onClick={() => setShowImport(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium"
+                      >
+                        <Upload size={12} /> Import
+                      </button>
 
                       <div className="flex items-center bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
                         {(['all', 'checked_in', 'pending'] as const).map((f) => (
@@ -539,27 +618,44 @@ export function AdminPortal({ onNavigateToCheckIn, onLogout, adminUsername, admi
                           </button>
                         ))}
                       </div>
-                      <button onClick={exportAttendees}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
+
+                      <button
+                        onClick={exportAttendees}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-colors text-xs font-medium"
+                      >
                         <Download size={12} /> CSV
                       </button>
-                      <button onClick={exportPDF}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium">
+                      <button
+                        onClick={exportPDF}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-xs font-medium"
+                      >
                         <FileText size={12} /> PDF
                       </button>
                     </div>
                   </div>
+
                   <div className="flex-1 p-5 min-h-0 overflow-y-auto">
                     {eventView === 'dashboard'
                       ? <LiveDashboard eventId={selectedEvent.id} eventName={selectedEvent.name} />
+                      : eventView === 'waitlist'
+                      ? <WaitlistManager eventId={selectedEvent.id} />
                       : <AttendeesList eventId={selectedEvent.id} />
                     }
                   </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-                  <Calendar size={48} className="text-slate-300 mx-auto mb-4" />
-                  <p className="text-slate-500">Select an event to view attendees</p>
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col items-center justify-center flex-1 text-center p-12">
+                  <div className="bg-blue-50 p-5 rounded-2xl mb-4">
+                    <Calendar size={40} className="text-blue-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-700 mb-1">No event selected</h3>
+                  <p className="text-slate-400 text-sm mb-4">Choose an event from the sidebar or create a new one</p>
+                  <button
+                    onClick={() => setShowEventForm(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold"
+                  >
+                    <Plus size={16} /> Create Event
+                  </button>
                 </div>
               )}
             </div>
